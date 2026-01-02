@@ -1,0 +1,82 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle
+/android/local.properties
+/android/.idea
+/android/.DS_Store
+/android/build
+/android/captures
+/android/gradlew
+/android/gradlew.bat
+
+# Linux
+/linux/flutter/ephemeral
+/linux/flutter/generated_plugin_registrant.cc
+/linux/flutter/generated_plugin_registrant.h
+/linux/flutter/my_application.cc
+/linux/flutter/my_application.h
+
+# Windows
+/windows/flutter/ephemeral
+/windows/flutter/generated_plugin_registrant.cc
+/windows/flutter/generated_plugin_registrant.h
+/windows/flutter/runner/runner.exe.manifest
+
+# MacOS
+/macos/Flutter/ephemeral
+/macos/Flutter/GeneratedPluginRegistrant.swift
+/macos/Runner/generated_plugin_registrant.swift
+
+# Exceptions to above rules.
+!/linux/flutter/my_application.cc
+!/linux/flutter/my_application.h
+# (Keep default generated files if they are not re-generated on build, but ephemeral IS re-generated)
+# Actually, generated_plugin_registrant IS re-generated.
+
+# Archives
+*.apk
+*.aab
+*.zip
+*.tar.gz
+
