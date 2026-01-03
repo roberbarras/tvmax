@@ -29,6 +29,10 @@ import 'features/programs/presentation/providers/series_provider.dart';
 import 'features/programs/presentation/providers/documentaries_provider.dart';
 import 'core/providers/navigation_provider.dart';
 
+import 'dart:io';
+import 'features/player/data/datasources/desktop_player_data_source.dart';
+import 'features/player/data/datasources/mobile_player_data_source.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -92,9 +96,16 @@ Future<void> init() async {
   );
 
   // Data sources
-  sl.registerLazySingleton<PlayerLocalDataSource>(
-    () => PlayerLocalDataSourceImpl(),
-  );
+  // Data sources
+  if (Platform.isAndroid || Platform.isIOS) {
+    sl.registerLazySingleton<PlayerLocalDataSource>(
+      () => MobilePlayerDataSource(),
+    );
+  } else {
+    sl.registerLazySingleton<PlayerLocalDataSource>(
+      () => DesktopPlayerDataSource(),
+    );
+  }
 
   // Downloads Provider
   sl.registerFactory(() => DownloadsProvider(
