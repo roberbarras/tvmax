@@ -1,104 +1,100 @@
-# TVMax Desktop
+# TVMax (Unofficial Atresplayer Client)
 
-Aplicación de escritorio multiplataforma (Linux, Windows, macOS) para navegar y reproducir contenido de tv de forma fluida y sin publicidad intrusiva. Desarrollada con Flutter y siguiendo principios de Clean Architecture y SOLID.
+![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Provider](https://img.shields.io/badge/State-Provider-blueviolet?style=for-the-badge)
+![License](https://img.shields.io/badge/License-Copyright-red?style=for-the-badge)
+
+
+Aplicación multiplataforma (Android, Linux, Windows) para navegar, reproducir y descargar contenido de Atresplayer. Diseñada para ser rápida, privada y funcional, eliminando la publicidad intrusiva y ofreciendo una experiencia premium sin coste adicional (usando tu propia cuenta o contenido gratuito).
 
 > [!WARNING]
-> Esta es una aplicación no oficial y con fines educativos. Requiere una cuenta de Atresplayer (las cookies se configuran manualmente por ahora).
+> Esta es una aplicación no oficial con fines educativos. Requiere una cuenta de Atresplayer para contenidos premium (cookie configurada manualmente). Si no tienes licencia adjunta, el código tiene Copyright exclusivo del autor.
 
-## Características
+## ✨ Características Principales
 
-- 📺 **Navegación de Programas**: Explora el catálogo de programas disponibles.
-- 🎬 **Listado de Episodios**: Visualiza episodios con imágenes y descripciones.
-- ▶️ **Reproducción con VLC**: Integración directa con VLC Media Player para una experiencia de reproducción superior.
-- ⬇️ **Descargas con yt-dlp**: Descarga tus episodios favoritos para verlos offline.
-- 💾 **Modo Offline**: Cacheo automático de programas y episodios usando SQLite.
-- 🎨 **Interfaz Moderna**: Diseño limpio y oscuro.
+- 📱 **Multiplataforma**: Funciona en Android, Linux y Windows.
+- 📺 **Navegación Completa**: Explora Programas, Series, Documentales y Noticias.
+- ⬇️ **Descargas Avanzadas**:
+  - Descarga vídeos HLS (m3u8) a MP4 localmente.
+  - **Gestor de Descargas**: Cola de descargas, barra de progreso, notificaciones de sistema.
+  - **Cancelación y Reintento**: Control total sobre tus descargas.
+- ▶️ **Reproducción Nativa**:
+  - **Android**: Reproductor integrado de alto rendimiento (basado en `media_kit`).
+  - **Escritorio**: Integración con VLC para máxima compatibilidad.
+- ❤️ **Favoritos**: Guarda tus series preferidas localmente.
+- 🍪 **Gestión de Sesión**: Configura tu cookie de sesión desde los Ajustes para desbloquear contenido Premium.
+- 🎨 **Interfaz Moderna**: Tema oscuro, diseño limpio, iconos personalizados y banners de disponibilidad.
 
-## Requisitos del Sistema
+## 🛠️ Requisitos del Sistema
 
-Para que la aplicación funcione correctamente, necesitas tener instaladas las siguientes herramientas en tu sistema:
+### Android
+- Android 7.0 (Nougat) o superior.
+- Arquitectura ARM64 (recomendada) o ARMv7.
 
-1.  **VLC Media Player**: Para reproducir los vídeos.
-    - Linux: `sudo apt install vlc` (Debian/Ubuntu) o `sudo pacman -S vlc` (Arch)
-    - Windows: [Descargar VLC](https://www.videolan.org/)
-    - macOS: `brew install --cask vlc`
+### Escritorio (Linux/Windows)
+- **VLC Media Player**: Debe estar instalado para la reproducción.
+  - Linux: `sudo apt install vlc`
+  - Windows: [Descargar VLC](https://www.videolan.org/)
+- **yt-dlp**: Necesario para las descargas en escritorio.
+  - Linux: `sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp`
+  - Windows: Descargar `.exe` y añadir al PATH.
 
-2.  **yt-dlp**: Para la funcionalidad de descarga.
-    - Linux: `sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp`
-    - Windows: [Descargar yt-dlp.exe](https://github.com/yt-dlp/yt-dlp) y añadir al PATH.
-    - macOS: `brew install yt-dlp`
+## 🚀 Instalación y Ejecución
 
-## Instalación y Ejecución
+### Desde Código Fuente
+1. **Prerrequisitos**: Tener Flutter SDK (3.5+) instalado.
+2. **Clonar**:
+   ```bash
+   git clone <repo-url>
+   cd TVMax
+   ```
+3. **Dependencias**:
+   ```bash
+   flutter pub get
+   ```
+4. **Ejecutar**:
+   - **Android**: Conecta tu móvil con Depuración USB.
+     ```bash
+     flutter run
+     ```
+   - **Escritorio**:
+     ```bash
+     flutter run -d linux  # o windows
+     ```
 
-Sigue las instrucciones específicas para tu sistema operativo en el archivo [USER_GUIDE.md](USER_GUIDE.md).
+## 🏗️ Arquitectura Técnica
 
-### Ejecución Rápida (Desarrolladores)
-1.  Asegúrate de tener Flutter instalado.
-2.  Clona el repositorio.
-3.  Instala dependencias:
-    ```bash
-    flutter pub get
-    ```
-4.  Ejecuta la app:
-    ```bash
-    flutter run -d linux # o windows/macos
-    ```
+El proyecto sigue una **Clean Architecture** rigurosa para garantizar mantenibilidad y escalabilidad.
 
-## Arquitectura y Diseño Técnico
-
-Este proyecto sigue una **Clean Architecture** estricta para asegurar escalabilidad, testabilidad y mantenimiento.
-
-### Estructura de Directorios
-
+### Estructura
 ```
 lib/
-├── core/                   # Componentes compartidos
-│   ├── database/           # Configuración de SQLite
-│   ├── error/              # Definición de fallos y excepciones
-│   ├── usecases/           # Interfaz base para casos de uso
-│   └── utils/              # Constantes y utilidades
-├── features/               # Módulos funcionales
-│   ├── episodes/           # Feature de Episodios
-│   ├── player/             # Feature de Reproducción/Descarga
-│   └── programs/           # Feature de Programas
-│       ├── data/           # Capa de Datos (Repositorios, DataSources, Modelos)
-│       ├── domain/         # Capa de Dominio (Entidades, Repositorios, Casos de Uso)
-│       └── presentation/   # Capa de UI (Widgets, Pages, Providers)
-├── injection_container.dart # Inyección de Dependencias (Service Locator)
-└── main.dart               # Punto de entrada
+├── core/                   # Utiles, Constantes, Errores
+├── features/               # Módulos (Episodes, Player, Programs, etc.)
+│   ├── data/               # Repositorios, DataSources (API, Local)
+│   ├── domain/             # Entidades, Casos de Uso (Lógica de Negocio)
+│   └── presentation/       # UI (Screens, Widgets) y Estado (Providers)
+└── main.dart               # Entry Point
 ```
 
-### Decisiones de Diseño y Trade-offs
+### Tecnologías Clave
+- **Flutter**: Framework UI.
+- **Provider**: Gestión de estado simple y efectiva.
+- **FFmpegKit**: Motor de procesamiento de vídeo en Android (para unir segmentos HLS).
+- **MediaKit**: Reproducción de vídeo moderna.
+- **Flutter Local Notifications**: Notificaciones nativas de progreso.
+- **Sqflite FFI**: Base de datos local para persistencia (Favoritos).
+- **Clean Architecture**: Separación de responsabilidades.
 
-1.  **State Management (Provider)**:
-    - *Decisión*: Se eligió `Provider` sobre opciones más complejas como BLoC/Riverpod por su simplicidad y efectividad para este alcance.
-    - *Trade-off*: Menos boilerplate que BLoC, pero requiere disciplina para no mezclar lógica de UI en los Providers.
+## 🔒 Privacidad y Seguridad
 
-2.  **Clean Architecture**:
-    - *Decisión*: Separación estricta en Domain, Data y Presentation.
-    - *Beneficio*: Permite cambiar la fuente de datos (ej. de API a Mock o Local) sin tocar la UI. Facilita los tests unitarios.
-    - *Costo*: Mayor número de archivos y clases (boilerplate) para funcionalidades simples.
+- **No Tracking**: La app no recopila datos de uso.
+- **Cookies**: Tu cookie de sesión se guarda en tu dispositivo de forma segura (Shared Preferences) y solo se envía a la API oficial de Atresplayer. No se comparte con terceros.
+- **Código Abierto**: Puedes auditar el código para verificar que no hay "puertas traseras".
 
-3.  **Persistencia (SQLite con sqflite_common_ffi)**:
-    - *Decisión*: Uso de FFI para soporte de escritorio nativo de SQLite.
-    - *Estrategia*: **Network-First**. Se intenta obtener datos frescos de la API. Si falla, se recurre a la base de datos local mostrada como "Offline Mode".
-    - *Trade-off*: La interfaz puede tardar un poco más en cargar inicialmente que una estrategia "Cache-First", pero asegura datos actualizados.
-
-4.  **Integración Externa (Process.start)**:
-    - *Decisión*: Invocar binarios de sistema (`vlc`, `yt-dlp`) en lugar de embeber reproductores complejos en Flutter.
-    - *Beneficio*: Aprovecha la robustez de VLC y yt-dlp sin reinventar la rueda. Reduce el tamaño de la app.
-    - *Costo*: Dependencia fuerte de que el usuario tenga estas herramientas instaladas.
-
-## Tecnologías Utilizadas
-
-- **Flutter & Dart**: Framework UI y lenguaje.
-- **Provider**: Gestión de estado.
-- **Dartz**: Programación funcional (Either) para manejo de errores.
-- **GetIt**: Inyección de dependencias.
-- **Sqflite FFI**: Base de datos local.
-- **Http**: Cliente REST.
-- **CachedNetworkImage**: Caché de imágenes eficiente.
-
-## Contribución
-
-Las Pull Requests son bienvenidas. Por favor, asegúrate de seguir los principios SOLID y mantener la cobertura de tests al añadir nuevas funcionalidades.
+---
+*Hecho con ❤️ y Flutter.*

@@ -2,10 +2,10 @@
 set -e
 
 # Configuration
-APP_NAME="TVMax_desktop"
+APP_NAME="tvmax"
 BUILD_DIR="../build/linux/x64/release/bundle"
 APP_DIR="AppDir"
-ICON_PATH="../.gemini/antigravity/brain/8600d415-2b30-4a05-93f1-b86bdb73629b/TVMax_logo_1767292931671.png" # Using generated icon
+ICON_PATH="../assets/icon/icon.png"
 
 echo "🚀 Starting AppImage creation for $APP_NAME..."
 
@@ -36,16 +36,21 @@ else
     convert -size 512x512 xc:orange "$APP_DIR/$APP_NAME.png" 2>/dev/null || touch "$APP_DIR/$APP_NAME.png"
 fi
 
-# 5. Download AppImageTool (if needed)
+# 5. Download AppImageTool and Runtime (if needed)
 if [ ! -f "appimagetool-x86_64.AppImage" ]; then
     echo "⬇️ Downloading appimagetool..."
     wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
     chmod +x appimagetool-x86_64.AppImage
 fi
 
+if [ ! -f "runtime-x86_64" ]; then
+    echo "⬇️ Downloading AppImage runtime..."
+    wget -q https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64
+fi
+
 # 6. Generate AppImage
 echo "🔨 Generating AppImage..."
 # Use appimagetool with --no-appstream because we don't have full metadata
-ARCH=x86_64 ./appimagetool-x86_64.AppImage "$APP_DIR" "$APP_NAME.AppImage"
+ARCH=x86_64 ./appimagetool-x86_64.AppImage --runtime-file runtime-x86_64 "$APP_DIR" "$APP_NAME.AppImage"
 
 echo "✅ Success! AppImage created at: $(pwd)/$APP_NAME.AppImage"

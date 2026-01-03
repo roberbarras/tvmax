@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=TVMax
+Exec=tvmax
+Icon=tvmax
+Type=Application
+Categories=AudioVideo;Player;
+Comment=Unofficial Atresplayer Client
+Terminal=false
+StartupNotify=true
