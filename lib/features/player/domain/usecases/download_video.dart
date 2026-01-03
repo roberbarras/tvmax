@@ -11,16 +11,28 @@ class DownloadVideo implements UseCase<void, DownloadVideoParams> {
 
   @override
   Future<Either<Failure, void>> call(DownloadVideoParams params) async {
-    return await repository.downloadVideo(params.url, params.fileName);
+    return await repository.downloadVideo(
+      params.url, 
+      params.fileName,
+      customPath: params.customPath,
+      onStart: params.onStart,
+    );
   }
 }
 
 class DownloadVideoParams extends Equatable {
   final String url;
   final String fileName;
+  final String? customPath;
+  final Function(int)? onStart;
 
-  const DownloadVideoParams({required this.url, required this.fileName});
+  const DownloadVideoParams({
+    required this.url, 
+    required this.fileName,
+    this.customPath,
+    this.onStart,
+  });
 
   @override
-  List<Object> get props => [url, fileName];
+  List<Object> get props => [url, fileName, if (customPath != null) customPath!];
 }

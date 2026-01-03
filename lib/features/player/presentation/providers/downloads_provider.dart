@@ -10,11 +10,11 @@ import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 
 class DownloadsProvider extends ChangeNotifier {
-  final PlayerLocalDataSource playerLocalDataSource;
+  final DownloadVideo downloadVideoUseCase;
   final SettingsProvider settingsProvider;
 
   DownloadsProvider({
-    required this.playerLocalDataSource, 
+    required this.downloadVideoUseCase, 
     required this.settingsProvider
   }) {
     _initNotifications();
@@ -109,42 +109,43 @@ class DownloadsProvider extends ChangeNotifier {
       // Get path from settings
       final customPath = settingsProvider.downloadPath;
       
-      // We await this now
-      await playerLocalDataSource.downloadVideo(
-        item.url, 
-        fileName, 
+      // Use Case execution
+      final result = await downloadVideoUseCase(DownloadVideoParams(
+        url: item.url,
+        fileName: fileName,
         customPath: customPath,
         onStart: (sessionId) {
            item.sessionId = sessionId;
-           // notifyListeners(); // Optional, avoiding too many updates
+        }
+      ));
+      
+      result.fold(
+        (failure) {
+          // Handle Failure
+          if (failure.message.contains('Cancelled')) {
+             item.status = DownloadStatus.failed;
+             print('Download cancelled by user');
+             downloads.removeWhere((d) => d.id == item.id);
+          } else {
+             item.status = DownloadStatus.failed;
+             print('Download failed: ${failure.message}');
+             _errorController.add(failure.message);
+             _showNotification(item.id.hashCode, 'Error de descarga', failure.message);
+          }
+        },
+        (_) {
+          // Handle Success
+          item.status = DownloadStatus.completed;
+          item.progress = 1.0;
+          item.sessionId = null;
+          _showNotification(item.id.hashCode, 'Descarga completada', '"${item.title}" se ha descargado correctamente.');
         }
       );
-      
-      item.status = DownloadStatus.completed;
-      item.progress = 1.0;
-      item.sessionId = null;
-      
-      _showNotification(item.id.hashCode, 'Descarga completada', '"${item.title}" se ha descargado correctamente.');
     } catch (e) {
-      // Check if cancelled
-      if (e.toString().contains('Cancelled')) {
-         item.status = DownloadStatus.failed; // Or indicate cancelled
-         // Don't show error notification for manual cancellation
-         print('Download cancelled by user');
-         downloads.removeWhere((d) => d.id == item.id); // Remove from list if cancelled?
-      } else {
-        item.status = DownloadStatus.failed;
-        print('Download failed fully: $e');
-        
-        String message = 'Error al descargar "${item.title}".';
-        if (e is FileSystemException && e.message.contains('No such file')) {
-            message = 'Error de almacenamiento. Verifica permisos.';
-        }
-        
-        _errorController.add(message);
-        _showNotification(item.id.hashCode, 'Error de descarga', message);
-      }
+       // Catch unexpected errors not handled by Failure
+       print('Unexpected Error: $e');
     }
+    
     notifyListeners();
   }
 }

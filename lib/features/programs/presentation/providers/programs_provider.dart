@@ -6,6 +6,13 @@ import '../../domain/usecases/get_programs.dart';
 import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../../../../core/utils/logger_service.dart';
 
+/// The State Management hub for the Programs Screen.
+///
+/// This provider handles:
+/// 1. Fetching programs (paginated).
+/// 2. Background fetching (getting ALL pages silently so searching is fast).
+/// 3. Filtering by text.
+/// 4. Synchronizing with Favorites.
 class ProgramsProvider extends ChangeNotifier {
   final GetPrograms getPrograms;
   final FavoritesProvider favoritesProvider;
@@ -14,6 +21,7 @@ class ProgramsProvider extends ChangeNotifier {
     required this.getPrograms,
     required this.favoritesProvider,
   }) {
+    // Listen to favorites changes to update the list if needed (e.g. re-sort or badges)
     favoritesProvider.addListener(_onFavoritesChanged);
   }
 
@@ -33,6 +41,16 @@ class ProgramsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Triggers the data fetching process.
+  ///
+  /// [loadMore] - If true, tries to fetch the next page. If false, resets everything and starts from page 0.
+  ///
+  /// Logic:
+  /// - Sets [isLoading] to true.
+  /// - If resetting: pre-fills the list with Favorites (so the user sees something immediately).
+  /// - Calls the API UseCase.
+  /// - On success: merges new items, deduplicates, and kicks off background fetching.
+  /// - On failure: shows the error.
   Future<void> fetchPrograms({bool loadMore = false}) async {
     if (isLoading) return;
     if (loadMore && !_hasMore) return;

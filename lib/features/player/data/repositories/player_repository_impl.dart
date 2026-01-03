@@ -20,12 +20,28 @@ class PlayerRepositoryImpl implements PlayerRepository {
   }
 
   @override
-  Future<Either<Failure, void>> downloadVideo(String url, String fileName) async {
+  Future<Either<Failure, void>> downloadVideo(
+    String url, 
+    String fileName, {
+    String? customPath, 
+    Function(int)? onStart,
+  }) async {
     try {
-      await localDataSource.downloadVideo(url, fileName);
+      await localDataSource.downloadVideo(
+        url, 
+        fileName, 
+        customPath: customPath,
+        onStart: onStart,
+      );
       return const Right(null);
     } catch (e) {
-      return const Left(CacheFailure('Could not start download'));
+      if (e.toString().contains('Cancelled')) {
+         // Optionally return a specific failure or just propagate void/Left
+         // For now we assume cancellation is a "Failure" or handled specifically?
+         // Actually, if we return Left(Failure), the UI can distinguish.
+         return const Left(CacheFailure('Download Cancelled')); 
+      }
+      return const Left(CacheFailure('Could not start download: $e'));
     }
   }
 }

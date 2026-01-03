@@ -6,11 +6,23 @@ import '../models/episode_model.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Interface for fetching Episode data from the API.
+///
+/// This involves two steps:
+/// 1. Listing the episodes (metadata).
+/// 2. Unlocking the stream (getting the actual .m3u8/.mpd URL).
 abstract class EpisodesRemoteDataSource {
+  /// Fetches the list of episodes for a given Show/Series [formatId].
   Future<List<EpisodeModel>> getEpisodes(String formatId, {int page = 0});
+
+  /// Tries to get the playback URL.
+  /// This is where we might hit a paywall (403), so tread carefully.
   Future<String> getStreamingUrl(String contentId);
 }
 
+/// Actual implementation of the Episode fetcher.
+///
+/// Uses [http.Client] to navigate the labyrinth of API endpoints.
 class EpisodesRemoteDataSourceImpl implements EpisodesRemoteDataSource {
   final http.Client client;
   final SharedPreferences sharedPreferences;

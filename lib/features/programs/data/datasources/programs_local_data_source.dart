@@ -3,8 +3,15 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/program_model.dart';
 
+/// Interface for local storage of programs.
+///
+/// Because nobody likes a blank screen when the WiFi dies.
 abstract class ProgramsLocalDataSource {
+  /// Saves a fresh batch of programs to the database.
   Future<void> cachePrograms(List<ProgramModel> programs);
+
+  /// Retrieves the last known list of programs.
+  /// Throws a [CacheException] if the cupboard is bare.
   Future<List<ProgramModel>> getLastPrograms();
 }
 

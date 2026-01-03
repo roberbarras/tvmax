@@ -98,7 +98,7 @@ Future<void> init() async {
 
   // Downloads Provider
   sl.registerFactory(() => DownloadsProvider(
-     playerLocalDataSource: sl(),
+     downloadVideoUseCase: sl(),
      settingsProvider: sl(), // Inject settings
   ));
   

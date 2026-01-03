@@ -57,13 +57,13 @@ cd ..
 mv packaging/tvmax.AppImage dist/
 echo -e "${GREEN}✅ AppImage created in dist/tvmax.AppImage${NC}"
 
-# 5. Build Android (Split by Architecture to reduce size)
-echo -e "${BLUE}🤖 Building Android APKs (Split per ABI)...${NC}"
-flutter build apk --release --split-per-abi
+# 5. Build Android (Universal APK)
+echo -e "${BLUE}🤖 Building Android APK (Universal)...${NC}"
+flutter build apk --release
 
-# Move APKs to dist
-cp build/app/outputs/flutter-apk/app-*-release.apk dist/
-echo -e "${GREEN}✅ APKs created in dist/ (ARM64, ARMv7, x86_64)${NC}"
+# Move APK to dist
+mv build/app/outputs/flutter-apk/app-release.apk dist/tvmax-release.apk
+echo -e "${GREEN}✅ Universal APK created in dist/tvmax-release.apk${NC}"
 
 echo -e "${GREEN}🎉 All builds completed successfully! Files are in 'dist/' folder.${NC}"
 ls -lh dist/

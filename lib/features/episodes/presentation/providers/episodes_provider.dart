@@ -7,6 +7,13 @@ import '../../../player/domain/usecases/play_video.dart';
 import '../../../player/domain/usecases/download_video.dart';
 import '../../../../core/utils/logger_service.dart';
 
+/// The heavy lifter for the Episodes screen.
+///
+/// Responsibilities:
+/// - Fetches episodes (with pagination support).
+/// - Silently loads ALL pages in the background to ensure smooth scrolling.
+/// - Checks "Availability" (Free vs Premium) for every single episode in parallel batches.
+/// - Manages the state of the "Play" action.
 class EpisodesProvider extends ChangeNotifier {
   final GetEpisodes getEpisodes;
   final GetStreamingUrl getStreamingUrl;
@@ -104,6 +111,12 @@ class EpisodesProvider extends ChangeNotifier {
 
   Map<String, int> episodeAvailability = {};
 
+  /// "Probes" an episode to see if we can play it.
+  ///
+  /// Instead of trusting metadata (which lies), we try to fetch the streaming URL.
+  /// If the server says 403, we know it's Premium.
+  /// If it says 200, it's Free.
+  /// We cache the result in [episodeAvailability] map to avoid spamming the server.
   Future<void> checkAvailability(String episodeId) async {
     if (episodeAvailability.containsKey(episodeId)) return; // Already checked
 
