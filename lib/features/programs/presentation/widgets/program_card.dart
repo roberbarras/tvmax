@@ -32,6 +32,8 @@ class ProgramCard extends StatelessWidget {
                     CachedNetworkImage(
                       imageUrl: program.imageUrlVertical!,
                       fit: BoxFit.cover,
+                      // Optimize memory: Decode only to 400px height (enough for grid items)
+                      memCacheHeight: 400,
                       placeholder: (context, url) => Center(
                         child: CircularProgressIndicator(),
                       ),

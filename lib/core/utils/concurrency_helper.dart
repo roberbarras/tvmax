@@ -26,4 +26,20 @@ class ConcurrencyHelper {
       return 4;
     }
   }
+
+
+  /// Returns the delay between background fetch pages.
+  /// 
+  /// Policy:
+  /// - < 4 threads: 2000ms (Slow down to let UI breathe)
+  /// - >= 4 threads: 500ms (Standard speed)
+  static Duration getBackgroundFetchDelay() {
+    if (kIsWeb) return const Duration(milliseconds: 500);
+
+    final processors = Platform.numberOfProcessors;
+    if (processors < 4) {
+      return const Duration(milliseconds: 2000);
+    }
+    return const Duration(milliseconds: 500);
+  }
 }

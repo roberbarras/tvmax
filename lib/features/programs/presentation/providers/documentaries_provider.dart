@@ -6,6 +6,7 @@ import '../../domain/usecases/get_programs.dart';
 
 import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../../../../core/utils/logger_service.dart';
+import '../../../../core/utils/concurrency_helper.dart';
 
 class DocumentariesProvider extends ChangeNotifier {
   final GetPrograms getPrograms;
@@ -98,7 +99,7 @@ class DocumentariesProvider extends ChangeNotifier {
     LoggerService().debug('Starting background fetch of docs...');
     
     while (_hasMore && _isLoadingBackground) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(ConcurrencyHelper.getBackgroundFetchDelay());
       
       final result = await getPrograms(GetProgramsParams(
         page: _currentPage + 1,

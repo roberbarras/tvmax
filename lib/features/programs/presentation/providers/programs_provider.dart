@@ -5,6 +5,7 @@ import '../../domain/usecases/get_programs.dart';
 
 import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../../../../core/utils/logger_service.dart';
+import '../../../../core/utils/concurrency_helper.dart';
 
 /// The State Management hub for the Programs Screen.
 ///
@@ -144,7 +145,8 @@ class ProgramsProvider extends ChangeNotifier {
     LoggerService().debug('Starting background fetch of programs...');
     
     while (_hasMore && _isLoadingBackground) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Dynamic throttle based on CPU power
+      await Future.delayed(ConcurrencyHelper.getBackgroundFetchDelay());
       
       final result = await getPrograms(GetProgramsParams(page: _currentPage + 1));
       

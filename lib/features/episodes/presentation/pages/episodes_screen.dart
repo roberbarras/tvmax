@@ -61,6 +61,8 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
                             imageUrl: episode.imageUrl!,
                             width: 100,
                             fit: BoxFit.cover,
+                            // Optimize memory: Decode only to 300px width (landscape thumbnail)
+                            memCacheWidth: 300,
                             placeholder: (context, url) => Container(color: Colors.grey),
                             errorWidget: (context, url, err) => const Icon(Icons.error),
                           )
