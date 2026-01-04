@@ -49,8 +49,34 @@ if [ ! -f "runtime-x86_64" ]; then
 fi
 
 # 6. Generate AppImage
-echo "🔨 Generating AppImage..."
-# Use appimagetool with --no-appstream because we don't have full metadata
-ARCH=x86_64 ./appimagetool-x86_64.AppImage --runtime-file runtime-x86_64 "$APP_DIR" "$APP_NAME.AppImage"
+# 6. Generate Versions (Lite and Full)
+echo "🔨 Generating AppImages..."
 
-echo "✅ Success! AppImage created at: $(pwd)/$APP_NAME.AppImage"
+# Define variations
+declare -A VARIATIONS
+VARIATIONS=( ["full"]="with_tools" ["lite"]="no_tools" )
+
+for VARIANT in "${!VARIATIONS[@]}"; do
+    TYPE=${VARIATIONS[$VARIANT]}
+    APP_DIR_VAR="${APP_DIR}_$VARIANT"
+    
+    echo "Creating $VARIANT version..."
+    rm -rf "$APP_DIR_VAR"
+    cp -r "$APP_DIR" "$APP_DIR_VAR"
+    
+    if [ "$TYPE" == "no_tools" ]; then
+        echo "🧹 Removing bundled tools for Lite version..."
+        rm -rf "$APP_DIR_VAR/usr/bin/bin"
+    fi
+    
+    # Generate AppImage
+    ARCH=x86_64 ./appimagetool-x86_64.AppImage --runtime-file runtime-x86_64 --no-appstream "$APP_DIR_VAR" "$APP_NAME-$VARIANT.AppImage"
+    echo "✅ TVMax-$VARIANT.AppImage created."
+    
+    rm -rf "$APP_DIR_VAR"
+done
+
+# Cleanup standard AppDir
+rm -rf "$APP_DIR"
+
+echo "✅ All builds completed!"

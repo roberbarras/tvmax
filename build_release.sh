@@ -79,9 +79,10 @@ chmod +x create_appimage.sh
 ./create_appimage.sh
 cd ..
 
-# Move AppImage to dist
-mv packaging/tvmax.AppImage dist/
-echo -e "${GREEN}✅ AppImage created in dist/tvmax.AppImage${NC}"
+# Move AppImages to dist
+mv packaging/tvmax-full.AppImage dist/
+mv packaging/tvmax-lite.AppImage dist/
+echo -e "${GREEN}✅ AppImages (Full & Lite) created in dist/${NC}"
 
 # 5. Build Android (Split APKs)
 echo -e "${BLUE}🤖 Building Android APKs (Split per ABI)...${NC}"
