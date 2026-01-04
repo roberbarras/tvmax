@@ -39,9 +39,9 @@ class PlayerRepositoryImpl implements PlayerRepository {
          // Optionally return a specific failure or just propagate void/Left
          // For now we assume cancellation is a "Failure" or handled specifically?
          // Actually, if we return Left(Failure), the UI can distinguish.
-         return const Left(CacheFailure('Download Cancelled')); 
+          return Left(CacheFailure('Download Cancelled')); 
       }
-      return const Left(CacheFailure('Could not start download: $e'));
+      return Left(CacheFailure('Could not start download: $e'));
     }
   }
 }

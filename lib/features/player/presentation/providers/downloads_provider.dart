@@ -29,12 +29,16 @@ class DownloadsProvider extends ChangeNotifier {
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   Future<void> _initNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
-    const settings = InitializationSettings(android: androidSettings);
-    await _notificationsPlugin.initialize(settings);
-    
-    // Request permissions for Android 13+
-    await _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
+    try {
+      const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
+      const settings = InitializationSettings(android: androidSettings);
+      await _notificationsPlugin.initialize(settings);
+      
+      // Request permissions for Android 13+
+      await _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
+    } catch (e) {
+      print('Notification Init Error: $e');
+    }
   }
 
   Future<void> _showNotification(int id, String title, String body) async {

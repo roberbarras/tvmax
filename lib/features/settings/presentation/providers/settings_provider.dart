@@ -39,10 +39,9 @@ class SettingsProvider extends ChangeNotifier {
       if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
          directory = await getDownloadsDirectory();
       } else if (Platform.isAndroid) {
-         // On Android, we try to use the external files directory or application documents
-         directory = await getExternalStorageDirectory(); // Returns /storage/emulated/0/Android/data/pkg/files
-         // Fallback if null
-         directory ??= await getApplicationDocumentsDirectory();
+         // Safe default: App Documents (Internal Storage). Guaranteed to work.
+         // External storage requires complex permissions on Android 10+.
+         directory = await getApplicationDocumentsDirectory(); 
       }
       _downloadPath = directory?.path ?? (Platform.isWindows ? 'C:\\Temp' : '/tmp');
     }
