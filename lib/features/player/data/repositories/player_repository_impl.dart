@@ -41,6 +41,10 @@ class PlayerRepositoryImpl implements PlayerRepository {
          // Actually, if we return Left(Failure), the UI can distinguish.
           return Left(CacheFailure('Download Cancelled')); 
       }
+
+      if (e is DownloadStuckException) {
+          return const Left(DownloadStuckFailure());
+      }
       return Left(CacheFailure('Could not start download: $e'));
     }
   }

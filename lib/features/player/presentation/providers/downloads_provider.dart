@@ -6,6 +6,7 @@ import '../../domain/entities/download_item.dart';
 import '../../data/datasources/player_local_data_source.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import '../../../../core/error/failures.dart';
 
 import '../../../settings/presentation/providers/settings_provider.dart';
 
@@ -130,6 +131,12 @@ class DownloadsProvider extends ChangeNotifier {
              item.status = DownloadStatus.failed;
              print('Download cancelled by user');
              downloads.removeWhere((d) => d.id == item.id);
+          } else if (failure is DownloadStuckFailure) {
+             print('Download stuck. Auto-retrying silently...');
+             // Recursive silent retry
+             Future.delayed(const Duration(seconds: 1), () {
+                 _startDownload(item);
+             });
           } else {
              item.status = DownloadStatus.failed;
              print('Download failed: ${failure.message}');

@@ -110,6 +110,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   }
                 ),
+                const Divider(height: 32),
+                const Text(
+                  'Preferencias de Reproducción:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('Subtítulos por defecto:'),
+                Consumer<SettingsProvider>(
+                  builder: (context, provider, _) {
+                    return DropdownButton<String>(
+                      value: provider.defaultSubtitleLanguage,
+                      isExpanded: true,
+                      dropdownColor: Colors.grey[900],
+                      items: const [
+                        DropdownMenuItem(value: 'off', child: Text('Desactivados')),
+                        DropdownMenuItem(value: 'es', child: Text('Español')),
+                        DropdownMenuItem(value: 'en', child: Text('Inglés')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) provider.setDefaultSubtitleLanguage(value);
+                      },
+                    );
+                  }
+                ),
+                const SizedBox(height: 16),
+                const Text('Calidad por defecto:'),
+                Consumer<SettingsProvider>(
+                  builder: (context, provider, _) {
+                    return DropdownButton<String>(
+                      value: provider.defaultQuality,
+                      isExpanded: true,
+                      dropdownColor: Colors.grey[900],
+                      items: const [
+                        DropdownMenuItem(value: 'auto', child: Text('Automática (Mejor disponible)')),
+                        DropdownMenuItem(value: '1080', child: Text('1080p')),
+                        DropdownMenuItem(value: '720', child: Text('720p')),
+                        DropdownMenuItem(value: '480', child: Text('480p')), // Data saver
+                      ],
+                      onChanged: (value) {
+                        if (value != null) provider.setDefaultQuality(value);
+                      },
+                    );
+                  }
+                ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

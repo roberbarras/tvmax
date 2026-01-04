@@ -143,3 +143,13 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+
+# === External Binaries (yt-dlp, ffmpeg) ===
+# Copy 'linux/bin' folder content to 'bundle/bin'
+set(EXTERNAL_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+if(EXISTS "${EXTERNAL_BIN_DIR}")
+  install(DIRECTORY "${EXTERNAL_BIN_DIR}"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}"
+    COMPONENT Runtime
+    USE_SOURCE_PERMISSIONS) 
+endif()

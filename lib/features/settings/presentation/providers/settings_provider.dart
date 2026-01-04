@@ -12,6 +12,8 @@ class SettingsProvider extends ChangeNotifier {
   static const String _keyDownloadPath = 'download_path';
   static const String _keyCookie = 'auth_cookie';
   static const String _keyDefaultSectionIndex = 'default_section_index';
+  static const String _keyDefaultSubtitleLanguage = 'default_subtitle_language';
+  static const String _keyDefaultQuality = 'default_quality';
 
   String _downloadPath = '';
   String get downloadPath => _downloadPath;
@@ -22,6 +24,12 @@ class SettingsProvider extends ChangeNotifier {
   int _defaultSectionIndex = 0;
   int get defaultSectionIndex => _defaultSectionIndex;
 
+  String _defaultSubtitleLanguage = 'off'; // 'off', 'es', 'en'
+  String get defaultSubtitleLanguage => _defaultSubtitleLanguage;
+
+  String _defaultQuality = 'auto'; // 'auto', '1080', '720', '480'
+  String get defaultQuality => _defaultQuality;
+
   bool _isLoading = true;
   bool get isLoading => _isLoading;
 
@@ -29,9 +37,13 @@ class SettingsProvider extends ChangeNotifier {
     _downloadPath = sharedPreferences.getString(_keyDownloadPath) ?? '';
     _cookie = sharedPreferences.getString(_keyCookie) ?? '';
     _defaultSectionIndex = sharedPreferences.getInt(_keyDefaultSectionIndex) ?? 0;
+    _defaultSubtitleLanguage = sharedPreferences.getString(_keyDefaultSubtitleLanguage) ?? 'off';
+    _defaultQuality = sharedPreferences.getString(_keyDefaultQuality) ?? 'auto';
 
     LoggerService().debug('[Settings] Loaded cookie: ${_cookie.isNotEmpty ? "YES (len=${_cookie.length})" : "NO"}');
     LoggerService().debug('[Settings] Default Section: $_defaultSectionIndex');
+    LoggerService().debug('[Settings] Default Subtitle: $_defaultSubtitleLanguage');
+    LoggerService().debug('[Settings] Default Quality: $_defaultQuality');
     
     if (_downloadPath.isEmpty) {
       // Default to downloads directory
@@ -69,6 +81,18 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setDefaultSectionIndex(int index) async {
     _defaultSectionIndex = index;
     await sharedPreferences.setInt(_keyDefaultSectionIndex, index);
+    notifyListeners();
+  }
+
+  Future<void> setDefaultSubtitleLanguage(String value) async {
+    _defaultSubtitleLanguage = value;
+    await sharedPreferences.setString(_keyDefaultSubtitleLanguage, value);
+    notifyListeners();
+  }
+
+  Future<void> setDefaultQuality(String value) async {
+    _defaultQuality = value;
+    await sharedPreferences.setString(_keyDefaultQuality, value);
     notifyListeners();
   }
 }

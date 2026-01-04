@@ -5,7 +5,7 @@ set -e
 APP_NAME="tvmax"
 BUILD_DIR="../build/linux/x64/release/bundle"
 APP_DIR="AppDir"
-ICON_PATH="../assets/icon/icon.png"
+ICON_PATH="../assets/icon/icon_master.png"
 
 echo "🚀 Starting AppImage creation for $APP_NAME..."
 

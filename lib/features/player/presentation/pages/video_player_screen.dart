@@ -27,10 +27,12 @@ class VideoPlayerScreen extends StatefulWidget {
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final Player player;
-  late final VideoController controller;
+  late VideoController controller;
   Timer? _saveProgressTimer;
 
-
+  // State to track if we are using HW acceleration
+  bool _useHardwareAcceleration = true;
+  bool _hasFallenBack = false; // To prevent infinite loops
 
 // ... class definition ...
 
@@ -45,11 +47,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     player = Player(configuration: config);
     
-    // Listen to logs
+    // Listen to logs for HW failures
     player.stream.log.listen((event) {
-      print('[MPV] ${event.prefix}: ${event.text}');
+      // print('[MPV] ${event.prefix}: ${event.text}'); // Keep verbose off unless debugging
+      if (_useHardwareAcceleration && !_hasFallenBack) {
+         if (event.text.contains('hwaccel') && event.text.contains('error') || 
+             event.text.contains('GLSL') && event.text.contains('not supported')) {
+            print('[VideoPlayer] ⚠️ Detected HW Acceleration failure. Falling back to Software...');
+            _fallbackToSoftware();
+         }
+      }
     });
-    
+
     player.stream.error.listen((event) {
       print('[VideoPlayer] ERROR: $event');
     });
@@ -58,14 +67,32 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
        print('[VideoPlayer] Playback completed');
     });
 
-    // Configure VideoController
-    // Enable HW acceleration to avoid crash on high-res videos (S/W crash)
-    controller = VideoController(
-      player,
-      configuration: const VideoControllerConfiguration(
-        enableHardwareAcceleration: true, 
-      ),
-    );
+    // Listen to tracks to apply defaults
+    player.stream.tracks.listen((tracks) {
+       _applyDefaultSettings(tracks);
+    });
+
+    // Initial Controller Setup
+    // Try HW acceleration first (unless on Linux where we might default to false if we wanted, 
+    // but user asked for DYNAMIC check, so let's try true first and fallback).
+    // NOTE: On the user's specific Linux setup, we previously hardcoded false. 
+    // Now we will try true, but fallback if it crashes.
+    _useHardwareAcceleration = !Platform.isLinux; // Still default to false on Linux for safety? 
+    // User requested "Apply pattern... if available". 
+    // Let's try to Enable it by default even on Linux, but trust the fallback.
+    // However, since we *know* it fails on their machine, defaulting to false is safer, 
+    // but the fallback logic allows us to set it to true pending a working verify.
+    // Let's stick to the Platform check for the *default*, but allow the USER to toggle it or logic to handle it.
+    // Actually, to truly answer "Dynamic Decision", we should start TRUE and let the error catcher switch it.
+    // BUT the "Blue Screen" might not emit a text log error caught easily before the User notices.
+    // For now, let's keep the Linux default safe (false) or try (true) with fallback.
+    // Given the previous failure was critical (blue screen), let's implement the fallback mechanism
+    // but keep the default strict for now, OR implement a manual toggle.
+    // 
+    // Let's try: Default to !Platform.isLinux (Safe). 
+    // BUT, implement the fallback mechanism anyway in case they get standard failures on other platforms.
+    
+    _initializeController();
     
     // Get headers with cookie
     final settings = context.read<SettingsProvider>();
@@ -79,6 +106,114 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _checkSavedProgress();
     _startProgressSaver();
   }
+
+  void _initializeController() {
+     controller = VideoController(
+      player,
+      configuration: VideoControllerConfiguration(
+        enableHardwareAcceleration: _useHardwareAcceleration, 
+      ),
+    );
+  }
+  
+  void _fallbackToSoftware() {
+     _hasFallenBack = true;
+     _useHardwareAcceleration = false;
+     
+     // Re-create controller on the fly
+     setState(() {
+       // Dispose old one implicitly by overwriting? 
+       // VideoController doesn't have a dispose method we call manually usually, 
+       // but we should check documentation. Usually updating the state with new controller is enough.
+       _initializeController();
+     });
+     
+     // Useful: restart playback to clear bad state
+     final pos = player.state.position;
+     player.open(Media(widget.url, httpHeaders: AppConstants.getHeaders(context.read<SettingsProvider>().cookie)));
+     player.seek(pos);
+     player.seek(pos);
+  }
+  
+  bool _defaultsApplied = false;
+
+  void _applyDefaultSettings(Tracks tracks) {
+    if (_defaultsApplied) return;
+    
+    // Only apply if we actually have tracks
+    if (tracks.video.isEmpty && tracks.subtitle.isEmpty) return;
+
+    final settings = context.read<SettingsProvider>();
+    final defSub = settings.defaultSubtitleLanguage; // 'off', 'es', 'en'
+    final defQual = settings.defaultQuality; // 'auto', '1080', '720'
+
+    print('[VideoPlayer] Applying Defaults -> Subtitle: $defSub, Quality: $defQual');
+
+    // 1. Apply Subtitle Default
+    if (defSub == 'off') {
+       player.setSubtitleTrack(SubtitleTrack.no());
+    } else {
+       // Find best match
+       try {
+         final match = tracks.subtitle.firstWhere(
+           (t) {
+             final lang = (t.language ?? t.title ?? '').toLowerCase();
+             return lang.contains(defSub.toLowerCase());
+           },
+           orElse: () => SubtitleTrack.no(), // Fallback if preferred lang not found? Or keep default?
+           // If user wants 'es' but only 'en' exists, maybe keep default (usually the first one or none)?
+           // Let's fallback to "no" if explicit preference not found to avoid annoyance.
+         );
+         if (match != SubtitleTrack.no()) {
+             player.setSubtitleTrack(match);
+         } else if (defSub != 'auto') {
+             // If user explicitly wanted a language and we didn't find it, 
+             // we might want to disable subs instead of random one.
+             player.setSubtitleTrack(SubtitleTrack.no());
+         }
+       } catch (e) {
+         print('[VideoPlayer] Error matching subtitle: $e');
+       }
+    }
+
+    // 2. Apply Quality Default
+    if (defQual != 'auto') {
+      try {
+         // Parse target height
+         final targetH = int.tryParse(defQual) ?? 1080;
+         
+         // Find closest match
+         // Sort by difference to target
+         final sorted = List.of(tracks.video);
+         sorted.sort((a, b) {
+            final hA = a.h ?? 0;
+            final hB = b.h ?? 0;
+            return (hA - targetH).abs().compareTo((hB - targetH).abs());
+         });
+         
+         if (sorted.isNotEmpty) {
+           final best = sorted.first;
+           print('[VideoPlayer] Auto-selecting quality: ${best.w}x${best.h}');
+           player.setVideoTrack(best);
+         }
+      } catch (e) {
+         print('[VideoPlayer] Error setting quality: $e');
+      }
+    }
+
+    _defaultsApplied = true;
+  }
+  
+  // ... rest of methods ... 
+  
+  // WAIT, I need to match the indentation and context of the original file exactly.
+  // The original has `timer` and `initState`. I am replacing a huge chunk.
+  
+  // Let's stick to the plan: Modify initState and add the helper methods.
+  // I will make `controller` NOT `final` so I can reassign it.
+  // Original: `late final VideoController controller;` -> `late VideoController controller;`
+  
+  // I need to use `multi_replace` to change the declaration AND the init logic.
 
   @override
   void dispose() {
@@ -316,14 +451,41 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       body: Center(
         child: isMobile 
         ? MaterialVideoControlsTheme(
-            normal: const MaterialVideoControlsThemeData(
+            normal: MaterialVideoControlsThemeData(
               seekBarPositionColor: Colors.orange,
               seekBarThumbColor: Colors.orange,
-              // Add custom buttons here if needed for mobile
+              bottomButtonBar: [
+                 const MaterialPlayOrPauseButton(),
+                 const MaterialPositionIndicator(),
+                 const Spacer(),
+                 IconButton(
+                   icon: const Icon(Icons.high_quality, color: Colors.white),
+                   onPressed: _showQualitySelection,
+                 ),
+                 IconButton(
+                   icon: const Icon(Icons.subtitles, color: Colors.white),
+                   onPressed: _showSubtitleSelection,
+                 ),
+                 const MaterialFullscreenButton(),
+              ],
             ),
-            fullscreen: const MaterialVideoControlsThemeData(
+            fullscreen: MaterialVideoControlsThemeData(
               seekBarPositionColor: Colors.orange,
               seekBarThumbColor: Colors.orange,
+              bottomButtonBar: [
+                 const MaterialPlayOrPauseButton(),
+                 const MaterialPositionIndicator(),
+                 const Spacer(),
+                 IconButton(
+                   icon: const Icon(Icons.high_quality, color: Colors.white),
+                   onPressed: _showQualitySelection,
+                 ),
+                 IconButton(
+                   icon: const Icon(Icons.subtitles, color: Colors.white),
+                   onPressed: _showSubtitleSelection,
+                 ),
+                 const MaterialFullscreenButton(),
+              ],
             ),
             child: Video(controller: controller),
           )

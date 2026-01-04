@@ -62,13 +62,22 @@ dev_dependencies:
   flutter_launcher_icons: "^0.13.1"
 
 flutter_launcher_icons:
-  image_path: "assets/icon/icon.png"
-  android: "launcher_icon"
+  image_path: "assets/icon/icon_master.png"
+  android: true
   ios: false
+  linux: 
+    generate: true
+    image_path: "assets/icon/icon_master.png"
+  macos:
+    generate: true
+    image_path: "assets/icon/icon_master.png"
   windows:
     generate: true
-    image_path: "assets/icon/icon.png"
+    image_path: "assets/icon/icon_master.png"
     icon_size: 256
+  web:
+    generate: true
+    image_path: "assets/icon/icon_master.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -7,3 +7,4 @@ class PremiumContentException implements Exception {
   final int? statusCode;
   PremiumContentException({this.statusCode});
 }
+class DownloadStuckException implements Exception {}

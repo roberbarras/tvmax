@@ -39,3 +39,8 @@ class PremiumContentFailure extends Failure {
   @override
   List<Object> get props => [message, if (statusCode != null) statusCode!];
 }
+
+/// Represents a failure when download stalls.
+class DownloadStuckFailure extends Failure {
+  const DownloadStuckFailure([super.message = 'Download Stuck']);
+}

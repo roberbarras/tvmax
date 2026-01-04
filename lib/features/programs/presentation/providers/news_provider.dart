@@ -157,14 +157,14 @@ class NewsProvider extends ChangeNotifier {
       ).toList();
     }
 
-    // 2. Sort by Favorites - REMOVED per user request to keep API order
-    // filtered.sort((a, b) {
-    //   final favA = favoritesProvider.isFavorite(a.id);
-    //   final favB = favoritesProvider.isFavorite(b.id);
-    //   if (favA && !favB) return -1;
-    //   if (!favA && favB) return 1;
-    //   return 0;
-    // });
+    // 2. Sort by Favorites
+    filtered.sort((a, b) {
+      final favA = favoritesProvider.isFavorite(a.id);
+      final favB = favoritesProvider.isFavorite(b.id);
+      if (favA && !favB) return -1;
+      if (!favA && favB) return 1;
+      return 0;
+    });
 
     news = filtered;
   }
