@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.mediaplayer" "\0"
-            VALUE "FileDescription", "atresplayer_desktop" "\0"
+            VALUE "CompanyName", "TVMax Open Source" "\0"
+            VALUE "FileDescription", "TVMax Player" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "atresplayer_desktop" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.mediaplayer. All rights reserved." "\0"
-            VALUE "OriginalFilename", "atresplayer_desktop.exe" "\0"
-            VALUE "ProductName", "atresplayer_desktop" "\0"
+            VALUE "InternalName", "tvmax" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 TVMax. All rights reserved." "\0"
+            VALUE "OriginalFilename", "tvmax.exe" "\0"
+            VALUE "ProductName", "TVMax" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

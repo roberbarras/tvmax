@@ -70,10 +70,24 @@ class DesktopPlayerDataSource implements PlayerLocalDataSource {
            print('[DesktopStrategy] Using bundled binary: $executable');
         } else if (Platform.isWindows) {
              // Fallback to CWD or Path
+             // Try common debug paths for Windows "flutter run"
+             final debugBin = 'windows\\runner\\resources\\bin\\yt-dlp.exe';
+             
              if (await File('yt-dlp.exe').exists()) {
+                executable = 'yt-dlp.exe'; 
+                print('[DesktopStrategy] Found yt-dlp.exe in CWD');
+             } else if (await File(debugBin).exists()) {
+                executable = debugBin;
+                print('[DesktopStrategy] Found yt-dlp.exe in project debug bin');
+             } else if (await File('bin/yt-dlp.exe').exists()) {
+                executable = 'bin/yt-dlp.exe';
+                print('[DesktopStrategy] Found yt-dlp.exe in bin/');
+             } else {
+                // Try system PATH by just calling 'yt-dlp'
+                // But we can't easily check if it exists in PATH without running "where"
+                // Let's assume user might have it in PATH
+                print('[DesktopStrategy] yt-dlp.exe not found in local paths. Trying system PATH...');
                 executable = 'yt-dlp.exe';
-             } else if (await File('yt-dlp').exists()) {
-                executable = '.\\yt-dlp';
              }
         } else {
              if (await File('./yt-dlp').exists()) {

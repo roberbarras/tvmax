@@ -6,6 +6,7 @@ import '../../domain/usecases/get_streaming_url.dart';
 import '../../../player/domain/usecases/play_video.dart';
 import '../../../player/domain/usecases/download_video.dart';
 import '../../../../core/utils/logger_service.dart';
+import '../../../../core/utils/concurrency_helper.dart';
 
 /// The heavy lifter for the Episodes screen.
 ///
@@ -90,8 +91,10 @@ class EpisodesProvider extends ChangeNotifier {
     );
 
     if (episodesToCheck != null) {
-       // Process in batches of 5
-       int batchSize = 5;
+       // Process in batches tailored to device capabilities
+       final batchSize = ConcurrencyHelper.getDynamicBatchSize();
+       LoggerService().debug('Checking availability with concurrency: $batchSize');
+
        for (var i = 0; i < episodesToCheck!.length; i += batchSize) {
           if (_currentFormatId != formatId) break; // Check context validity
 

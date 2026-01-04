@@ -31,12 +31,36 @@ class DownloadsProvider extends ChangeNotifier {
 
   Future<void> _initNotifications() async {
     try {
+      // Android
       const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
-      const settings = InitializationSettings(android: androidSettings);
-      await _notificationsPlugin.initialize(settings);
+      
+      // Linux
+      const linuxSettings = LinuxInitializationSettings(
+        defaultActionName: 'Open',
+        defaultIcon: AssetsLinuxIcon('icons/app_icon.png'),
+      );
+      
+      // macOS / iOS
+      const darwinSettings = DarwinInitializationSettings();
+
+      final settings = InitializationSettings(
+        android: androidSettings,
+        linux: linuxSettings,
+        iOS: darwinSettings,
+        macOS: darwinSettings,
+      );
+      
+      await _notificationsPlugin.initialize(
+         settings,
+         onDidReceiveNotificationResponse: (details) {
+            // Handle click
+         },
+      );
       
       // Request permissions for Android 13+
-      await _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
+      if (Platform.isAndroid) {
+        await _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
+      }
     } catch (e) {
       print('Notification Init Error: $e');
     }
