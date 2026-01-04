@@ -35,7 +35,7 @@ class DownloadsProvider extends ChangeNotifier {
       const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
       
       // Linux
-      const linuxSettings = LinuxInitializationSettings(
+      final linuxSettings = LinuxInitializationSettings(
         defaultActionName: 'Open',
         defaultIcon: AssetsLinuxIcon('icons/app_icon.png'),
       );
