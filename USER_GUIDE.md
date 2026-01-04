@@ -1,93 +1,122 @@
-# 📺 TVMax - Guía de Usuario Completa
+# 📺 TVMax - Manual de Usuario Avanzado
 
-Bienvenido a **TVMax**, tu cliente de escritorio y móvil para disfrutar de contenido de Atresplayer sin restricciones. Esta guía te ayudará a instalar, configurar y sacar el máximo partido a la aplicación en cualquier dispositivo.
-
----
-
-## 🚀 Características Destacadas
-
-*   **Multiplataforma:** Disponible de forma nativa en **Windows**, **Linux** y **Android**.
-*   **Descargas Inteligentes:** Descarga tus series y programas favoritos para verlos sin conexión. Incluye un sistema "Watchdog" que reintenta automáticamente si la descarga se queda pegada.
-*   **Reproductor Avanzado:**
-    *   Soporte para subtítulos y cambio de calidad (1080p, 720p, etc.).
-    *   **Fallback Dinámico:** Detecta si tu hardware gráfico falla (pantallazo azul en Linux) y cambia automáticamente a modo seguro.
-*   **Favoritos:** Marca tus contenidos preferidos para tenerlos siempre a mano al inicio.
-*   **Privado:** Tus datos se quedan en tu dispositivo.
+Este manual detalla todas las funcionalidades, configuración y solución de problemas para **TVMax**.
 
 ---
 
-## 📦 Instalación y Requisitos
+## 1. 🚀 Introducción
 
-### 1. 🤖 Android
-*   **Requisitos:** Android 7.0 o superior.
-*   **Instalación:**
-    1.  Descarga el archivo `.apk` correspondiente a tu arquitectura (normalmente `arm64-v8a` para móviles modernos).
-    2.  Abre el archivo y acepta la instalación de orígenes desconocidos si se te pide.
-*   **Permisos:** La primera vez que intentes descargar, te pedirá permiso para mostrar notificaciones. Acéptalo para ver el progreso de tus descargas.
-
-### 2. 🐧 Linux
-*   **Formato:** Usamos **AppImage**, un formato portable que funciona en casi cualquier distribución (Ubuntu, Fedora, Arch...).
-*   **Instalación:**
-    1.  Descarga el archivo `TVMax.AppImage`.
-    2.  Hazlo ejecutable: `Right Click -> Properties -> Permissions -> Allow executing file as program` (o `chmod +x TVMax.AppImage`).
-    3.  Haz doble clic para abrir.
-*   **Nota:** La aplicación ya incluye dentro las herramientas `ffmpeg` y `yt-dlp` necesarias.
-
-### 3. 🪟 Windows
-*   **Formatos:**
-    *   **Instaldor (`setup_tvmax.exe`):** La opción recomendada. Instala el programa y crea accesos directos.
-    *   **Portable (`.zip`):** Si prefieres no instalar nada.
-*   **Nota Importante:** El instalador ya configuran todo automáticamente.
+TVMax es un cliente no oficial de código abierto para la plataforma Atresplayer. Su objetivo es ofrecer una experiencia **rápida** y **privada**.
 
 ---
 
-## ⚙️ Configuración Inicial (Crítico)
+## 2. 📦 Instalación
 
-Para poder acceder a los contenidos protegidos, necesitas configurar tu sesión.
+### 🤖 Android (Móviles y Tablets)
+*   **Android 7.0+** requerido.
+*   **Arquitecturas:**
+    *   **ARM64 (`v8a`)**: Para el 99% de móviles modernos (últimos 5 años). Mejor rendimiento.
+    *   **ARMv7**: Para dispositivos antiguos o tabletas de gama baja.
+*   **Pasos:** Descarga el APK -> Pulsa "Instalar" -> Acepta "Orígenes Desconocidos".
 
-1.  Abre la aplicación y ve a la pestaña **Ajustes** (icono de engranaje).
-2.  Busca la sección **Autenticación (Cookies)**.
-3.  Debes pegar aquí el valor de tu cookie de sesión.
-    *   *Cómo obtenerla:* Inicia sesión en la web oficial desde tu navegador, abre las Herramientas de Desarrollador (F12) -> Red/Network, haz clic en cualquier petición y busca la cabecera `Cookie` en la solicitud. Copia todo el valor.
-4.  Pulsa **Guardar**.
-5.  Reinicia la aplicación para asegurarte de que carga tu perfil (Premium/Free).
+### 🐧 Linux (Todas las Distros)
+*   Formato **AppImage** (Portable).
+*   **Variantes:**
+    1.  **Full (Recomendado):** Incluye todas las dependencias (`ffmpeg`, `yt-dlp`). Pesa ~100MB pero funciona siempre.
+    2.  **Lite:** Pesa ~18MB. Solo úsala si ya tienes `ffmpeg` y `python3` instalados en tu sistema.
+*   **Ejecución:** Dale clic derecho -> Propiedades -> Permisos -> "Permitir ejecutar como programa".
 
----
-
-## 🎮 Guía de Uso
-
-### Reproducción de Vídeo
-*   **Calidad:** Al reproducir, pulsa el icono **HQ** para seleccionar manualmente la resolución (1080p, 720p, 480p) o dejarlo en Automático.
-*   **Subtítulos:** Pulsa el icono **CC** para activar/desactivar subtítulos o cambiar el idioma.
-*   **Preferencias por Defecto:** En *Ajustes*, puedes definir si quieres que los vídeos empiecen siempre con o sin subtítulos, y en qué calidad predeterminada.
-
-### Descargas
-1.  Abre cualquier episodio o programa.
-2.  Pulsa el botón de **Descargar**.
-3.  Verás el progreso en la pantalla y en las notificaciones del sistema.
-4.  Si la descarga se congela por más de 60 segundos, el sistema la reiniciará automáticamente.
-5.  **Ubicación:** Por defecto se guardan en tu carpeta `Descargas` (o `Documents` en Android), pero puedes cambiar la ruta en *Ajustes*.
+### 🪟 Windows (10/11)
+*   Usa el instalador **`setup.exe`**.
+*   El instalador configura automáticamente las rutas y dependencias necesarias. No hace falta instalar Python ni nada extra.
 
 ---
 
-## 🛠️ Solución de Problemas (Troubleshooting)
+## 3. ⚙️ Configuración Vital (Cookies)
 
-### 🔹 Pantalla Azul al reproducir video (Linux)
-*   **Causa:** Tu tarjeta gráfica o drivers no soportan la aceleración por hardware que intentamos usar.
-*   **Solución Automática:** La aplicación detectará el error (`GLSL not supported`), mostrará un aviso en los logs y **reiniciará el reproductor en modo Software** automáticamente. No tienes que hacer nada, solo esperar un segundo.
+Para acceder a capítulos completos, contenido Premium o evitar restricciones geográficas, debes usar tu propia cuenta.
 
-### 🔹 Las descargas fallan en Windows (Modo Debug)
-*   Si estás desarrollando o ejecutando una versión "debug" (`flutter run`), es posible que te falten los binarios `yt-dlp.exe` y `ffmpeg.exe`.
-*   **Solución:** Descárgalos y colócalos en la carpeta `windows/bin/` dentro del proyecto.
+1.  **Obten tu Cookie:**
+    *   Entra en [atresplayer.com](https://www.atresplayer.com) desde tu navegador (Chrome/Firefox).
+    *   Inicia sesión con tu cuenta (Gratuita o Premium).
+    *   Pulsa `F12` para abrir las Herramientas de Desarrollador.
+    *   Ve a la pestaña **Red (Network)**.
+    *   Recarga la página.
+    *   Haz clic en la primera petición (normalmente `www.atresplayer.com`).
+    *   A la derecha, en "Encabezados de Solicitud" (Request Headers), busca `Cookie`.
+    *   **Copia todo el valor** de esa línea.
 
-### 🔹 No veo mis favoritos al inicio
-*   La aplicación intenta cargar tus favoritos nada más abrir. Si no salen, prueba a pulsar en otra pestaña y volver a la principal para refrescar la lista.
+2.  **En la App:**
+    *   Ve a **Ajustes** (icono engranaje).
+    *   Pega el valor en el campo **"Cookie de Sesión"**.
+    *   Pulsa **Guardar**.
+    *   **Reinicia la app.**
 
-### 🔹 La aplicación va lenta en mi PC antiguo
-*   Hemos implementado un **Paralelismo Dinámico**. La app detecta cuántos núcleos tiene tu CPU y ajusta la velocidad:
-    *   < 4 Núcleos: Modo lento (1 petición a la vez) para no colgar el PC.
-    *   4+ Núcleos: Modo rápido (Múltiples peticiones paralelas).
+> [!TIP]
+> Si tu cuenta es Premium, verás el logotipo "Premium" en tu perfil dentro de la app y podrás descargar contenidos exclusivos.
 
 ---
 
-**Licencia:** Open Source. Disfruta y contribuye.
+## 4. 🎮 Uso de la Aplicación
+
+### 🔍 Navegación y Búsqueda
+*   **Barra Inferior:** Navega entre *Programas*, *Series*, *Documentales*, *Noticias*, *Favoritos* y *Ajustes*.
+*   **Buscador Global:** (Próximamente) Por ahora explora por categorías alfabéticamente.
+*   **Favoritos:** Pulsa el icono del corazón ❤️ en cualquier ficha para añadir la serie a tu lista rápida.
+
+### ▶️ Reproductor Multi-Formato
+*   **Calidad de Vídeo:**
+    *   Pulsa **HQ** para elegir entre `1080p`, `720p`, `480p` o `Auto`.
+    *   *Nota:* En conexiones lentas, elige 480p para evitar parones.
+*   **Subtítulos:**
+    *   Pulsa **CC** para activarlos.
+    *   Desde *Ajustes*, puedes definir "Activar subtítulos por defecto".
+*   **Controles:** Doble toque a los lados para avanzar/retroceder 10 segundos.
+
+### ⬇️ Gestor de Descargas "Watchdog"
+TVMax incluye un motor de descargas blindado contra fallos de red.
+1.  Entra en un episodio.
+2.  Pulsa **Descargar**.
+3.  **Monitorización Inteligente:**
+    *   Si la descarga se detiene (se va el WiFi, servidor lento), el sistema "Watchdog" lo detecta a los 60 segundos.
+    *   Automáticamente cancela el proceso zombie y lo reinicia desde donde se quedó (si el servidor lo permite) o desde cero.
+    *   Tú solo relájate: la app se asegura de que el archivo llegue al 100%.
+
+---
+
+## 5. ⚡ Optimización de Rendimiento (PCs Antiguos)
+
+Hemos implementado un "Modo Eco" automático para hardware modesto.
+*   **Detección de Núcleos:**
+    *   Si tu PC tiene **menos de 4 núcleos**, la app entra en modo "Low-Spec".
+    *   Las carátulas se cargan más despacio (paralelismo reducido) para no bloquear la interfaz.
+    *   Se reduce el uso de memoria RAM decodificando imágenes a menor resolución (400px).
+
+---
+
+## 6. 🛠️ Solución de Problemas Frecuentes
+
+### 🔵 Linux: Pantalla Azul en el Vídeo
+*   **Síntoma:** El audio se oye pero el vídeo es un cuadro azul sólido.
+*   **Razón:** Tu gráfica no soporta `OpenGL` moderno o los drivers `mpv` fallan.
+*   **Solución:** No hagas nada. Espera 2 segundos. La app detectará el fallo y cambiará sola a renderizado por software (`sw`).
+
+### ❌ Error "Video no disponible" o "Geobloqueo"
+*   **Razón:** Tu cookie ha caducado o no tienes permisos para ese contenido.
+*   **Solución:** Vuelve a obtener la cookie desde el navegador (paso 3) y actualízala en Ajustes.
+
+### 🐌 La app va lenta al hacer scroll
+*   Estamos cargando muchas imágenes de alta resolución.
+*   En la versión **v1.0** hemos limitado el tamaño en memoria (`memCacheHeight`), lo que debería haber solucionado esto en el 90% de los casos.
+
+---
+
+## 7. ⚖️ Notas Legales y Responsabilidad
+
+Este software es un proyecto educativo para demostrar capacidades de **Flutter** y **Clean Architecture**.
+*   No alojamos contenido.
+*   No puenteamos DRM (el contenido se reproduce usando tus credenciales legítimas).
+*   El uso de la aplicación es responsabilidad del usuario.
+
+---
+*Manual actualizado a la versión v1.0 (Enero 2026)*

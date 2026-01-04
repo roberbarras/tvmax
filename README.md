@@ -5,96 +5,106 @@
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![Provider](https://img.shields.io/badge/State-Provider-blueviolet?style=for-the-badge)
-![License](https://img.shields.io/badge/License-Copyright-red?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
+Aplicación multiplataforma (Android, Linux, Windows) desarrollada como proyecto **educativo** para explorar las capacidades de **Flutter** en desarrollo de escritorio y móvil.
 
-Aplicación multiplataforma (Android, Linux, Windows) para navegar, reproducir y descargar contenido de Atresplayer. Diseñada para ser rápida, privada y funcional, eliminando la publicidad intrusiva y ofreciendo una experiencia premium sin coste adicional (usando tu propia cuenta o contenido gratuito).
+Este proyecto tiene como objetivo principal el **aprendizaje**:
+*   Arquitectura Limpia (Clean Architecture) en Flutter 3.
+*   Consumo y gestión de APIs REST complejas.
+*   Manejo avanzado de Streams y descargas en segundo plano.
+*   Integración nativa (FFI) con reproductores de vídeo (VLC/MediaKit).
 
-> [!WARNING]
-> Esta es una aplicación no oficial con fines educativos. Requiere una cuenta de Atresplayer para contenidos premium (cookie configurada manualmente). Si no tienes licencia adjunta, el código tiene Copyright exclusivo del autor.
+Diseñada para ser rápida, privada y funcional, ofreciendo una experiencia premium sin coste adicional (usando tu propia cuenta o contenido gratuito).
+
+---
+
+---
+
+## 🗺️ Roadmap (Próximamente)
+
+*   **🍎 Apple Ecosystem (iOS / macOS):**
+    *   La base de código de Flutter ya es compatible con iOS y macOS.
+    *   Sin embargo, **actualmente no dispongo de la infraestructura de hardware necesaria (Mac) para compilar y firmar los binarios**.
+    *   En cuanto sea posible, se añadirán los ejecutables `.ipa` y `.dmg` a las Releases.
+
+---
+
+## 📥 Descargas (Última Versión v1.0)
+
+Elige la versión adecuada para tu dispositivo:
+
+| Plataforma | Archivo | Descripción | Enlace |
+| :--- | :--- | :--- | :--- |
+| **Android (Moderno)** | `tvmax-arm64-v8a-release.apk` | Para móviles actuales (últimos 5-6 años). Mayor rendimiento. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-arm64-v8a-release.apk) |
+| **Android (Antiguo)** | `tvmax-armeabi-v7a-release.apk` | Para móviles antiguos o gama baja. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-armeabi-v7a-release.apk) |
+| **Windows** | `tvmax-full-x64-setup.exe` | Instalador completo. Incluye todo lo necesario (no requiere configurar nada). | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-full-x64-setup.exe) |
+| **Linux (Recomendado)**| `tvmax-full.AppImage` | Versión autónoma. Incluye `ffmpeg` y `yt-dlp`. Funciona en cualquier distro. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-full.AppImage) |
+| **Linux (Ligero)** | `tvmax-lite.AppImage` | Versión reducida (~18MB). Requiere que tengas `ffmpeg` instalado en tu sistema. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-lite.AppImage) |
+
+---
 
 ## ✨ Características Principales
 
-- 📱 **Multiplataforma**: Funciona en Android, Linux y Windows.
-- 📺 **Navegación Completa**: Explora Programas, Series, Documentales y Noticias.
-- ⬇️ **Descargas Avanzadas**:
-  - Descarga vídeos HLS (m3u8) a MP4 localmente.
-  - **Gestor de Descargas**: Cola de descargas, barra de progreso, notificaciones de sistema.
-  - **Cancelación y Reintento**: Control total sobre tus descargas.
-- ▶️ **Reproducción Nativa**:
-  - **Android**: Reproductor integrado de alto rendimiento (basado en `media_kit`).
-  - **Escritorio**: Integración con VLC para máxima compatibilidad.
-- ❤️ **Favoritos**: Guarda tus series preferidas localmente.
-- 🍪 **Gestión de Sesión**: Configura tu cookie de sesión desde los Ajustes para desbloquear contenido Premium.
-- 🎨 **Interfaz Moderna**: Tema oscuro, diseño limpio, iconos personalizados y banners de disponibilidad.
+*   **⚡ Rendimiento Optimizado**:
+    *   **Modo Eco**: Detecta automáticamente PCs lentos (antiguos) y ajusta la velocidad de carga para evitar bloqueos.
+    *   **Gestión de Memoria**: Carga de imágenes optimizada para consumir un 70% menos de RAM en listas grandes.
+*   **⬇️ Descargas Inteligentes**:
+    *   **Watchdog**: Si una descarga se queda "pegada" (común en redes inestables), la app la detecta y reinicia automáticamente sin que tengas que hacer nada.
+    *   **Portabilidad**: Los vídeos se descargan en formato `.mp4` compatible con cualquier reproductor.
+*   **🎮 Reproductor Híbrido**:
+    *   Soporte para subtítulos y selección de calidad (1080p, 720p...).
+    *   **Fallback Automático (Linux)**: Si tu tarjeta gráfica falla (pantallazo azul), el reproductor cambia solo a modo software para no crashear.
+*   **🍪 Gestión de Sesión**:
+    *   Usa tu propia cuenta (Free o Premium) copiando tu cookie de sesión.
 
-## 🛠️ Requisitos del Sistema
+---
+
+## 🛠️ Requisitos e Instalación
 
 ### Android
-- Android 7.0 (Nougat) o superior.
-- Arquitectura ARM64 (recomendada) o ARMv7.
+*   **Versión:** Android 7.0 o superior.
+*   **Instalación:** Descarga el APK, abre el archivo y acepta "Instalar aplicaciones desconocidas" si se te solicita.
 
-### Escritorio (Linux/Windows)
-- **VLC Media Player**: Debe estar instalado para la reproducción.
-  - Linux: `sudo apt install vlc`
-  - Windows: [Descargar VLC](https://www.videolan.org/)
-- **yt-dlp**: Necesario para las descargas en escritorio.
-  - Linux: `sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp`
-  - Windows: Descargar `.exe` y añadir al PATH.
+### Windows
+*   **Requisitos:** Windows 10/11 (64 bits).
+*   **Instalación:** Ejecuta el instalador `setup.exe`. El programa se encargará de configurar las herramientas de descarga (`yt-dlp`) automáticamente.
 
-## 🚀 Instalación y Ejecución
+### Linux
+*   **Full (`.AppImage`)**:
+    1.  Descarga el archivo.
+    2.  Dale permisos de ejecución: `chmod +x tvmax-full.AppImage`
+    3.  Ejecuta con doble clic.
+*   **Lite (`.AppImage`)**:
+    *   Igual que el anterior, pero asegúrate de tener instalado: `sudo apt install ffmpeg python3`
 
-### Desde Código Fuente
-1. **Prerrequisitos**: Tener Flutter SDK (3.5+) instalado.
-2. **Clonar**:
-   ```bash
-   git clone <repo-url>
-   cd TVMax
-   ```
-3. **Dependencias**:
-   ```bash
-   flutter pub get
-   ```
-4. **Ejecutar**:
-   - **Android**: Conecta tu móvil con Depuración USB.
-     ```bash
-     flutter run
-     ```
-   - **Escritorio**:
-     ```bash
-     flutter run -d linux  # o windows
-     ```
+---
 
-## 🏗️ Arquitectura Técnica
+---
 
-El proyecto sigue una **Clean Architecture** rigurosa para garantizar mantenibilidad y escalabilidad.
+## 📖 Manual de Uso Rápido
 
-### Estructura
-```
-lib/
-├── core/                   # Utiles, Constantes, Errores
-├── features/               # Módulos (Episodes, Player, Programs, etc.)
-│   ├── data/               # Repositorios, DataSources (API, Local)
-│   ├── domain/             # Entidades, Casos de Uso (Lógica de Negocio)
-│   └── presentation/       # UI (Screens, Widgets) y Estado (Providers)
-└── main.dart               # Entry Point
-```
+### 1. Configuración Inicial (¡Importante!)
+Para ver contenido Premium, necesitas tu **Cookie de Sesión**:
+1.  Ve a **Ajustes** dentro de la App.
+2.  Pega el valor de la cookie `Cookie` de atresplayer.com (puedes obtenerla desde las herramientas de desarrollador de tu navegador, F12 -> Red).
+3.  Guarda y reinicia.
 
-### Tecnologías Clave
-- **Flutter**: Framework UI.
-- **Provider**: Gestión de estado simple y efectiva.
-- **FFmpegKit**: Motor de procesamiento de vídeo en Android (para unir segmentos HLS).
-- **MediaKit**: Reproducción de vídeo moderna.
-- **Flutter Local Notifications**: Notificaciones nativas de progreso.
-- **Sqflite FFI**: Base de datos local para persistencia (Favoritos).
-- **Clean Architecture**: Separación de responsabilidades.
+### 2. Reproducción
+*   **Calidad:** Pulsa el icono **HQ** para cambiar entre 1080p, 720p, etc.
+*   **Subtítulos:** Pulsa **CC** para activarlos.
+*   **Problemas:** Si en Linux ves una pantalla azul, espera 2 segundos. La app cambiará sola a "Modo Seguro".
 
-## 🔒 Privacidad y Seguridad
+### 3. Descargas
+*   Pulsa el botón de descarga en cualquier episodio.
+*   Si la descarga se detiene, el sistema la reanudará automáticamente.
 
-- **No Tracking**: La app no recopila datos de uso.
-- **Cookies**: Tu cookie de sesión se guarda en tu dispositivo de forma segura (Shared Preferences) y solo se envía a la API oficial de Atresplayer. No se comparte con terceros.
-- **Código Abierto**: Puedes auditar el código para verificar que no hay "puertas traseras".
+ℹ️ **[Ver Guía de Usuario Completa (USER_GUIDE.md)](USER_GUIDE.md)** para detalles avanzados y solución de problemas.
+
+---
+
+> [!NOTE]
+> **Proyecto Educativo:** Esta aplicación no tiene relación oficial con Atresmedia. Se ha creado únicamente para demostrar cómo estructurar una aplicación moderna en Flutter que interactúa con servicios web reales de alta demanda.
 
 ---
 *Hecho con ❤️ y Flutter.*

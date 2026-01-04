@@ -80,3 +80,14 @@ app.*.map.json
 *.zip
 *.tar.gz
 
+
+# Build Artifacts
+/dist/
+
+# External Binaries (Bundled)
+/windows/bin/
+/linux/bin/
+/AppDir/
+/packaging/AppDir/
+/packaging/runtime-*
+/packaging/appimagetool-*
