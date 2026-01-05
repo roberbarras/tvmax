@@ -10,7 +10,7 @@ jobs:
   # ANDROID BUILD
   # -----------------------------------------------------------------------------
   build-android:
-    name: 🤖 Build Android APKs
+    name: Build Android APKs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
   # LINUX BUILD
   # -----------------------------------------------------------------------------
   build-linux:
-    name: 🐧 Build Linux AppImage
+    name: Build Linux AppImage
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +50,7 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev wget fuse libasound2-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev wget fuse libasound2-dev libmpv-dev mpv
 
       - name: Download External Binaries (yt-dlp, ffmpeg)
         # We need these for the "Full" version
@@ -100,7 +100,7 @@ jobs:
   # WINDOWS BUILD
   # -----------------------------------------------------------------------------
   build-windows:
-    name: 🪟 Build Windows Exe
+    name: Build Windows Exe
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -152,7 +152,7 @@ jobs:
   # They are useful for checking compilation errors and testing on local Simulators.
   # To install on real iOS devices, you need a paid Apple Developer Account.
   build-apple:
-    name: 🍎 Build macOS & iOS
+    name: Build macOS & iOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -170,7 +170,7 @@ jobs:
         run: flutter config --enable-macos-desktop
 
       - name: Build macOS (.app)
-        run: flutter build macos --release --no-codesign
+        run: flutter build macos --release
 
       - name: Zip macOS App
         run: |
