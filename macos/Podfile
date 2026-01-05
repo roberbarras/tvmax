@@ -1,0 +1,27 @@
+platform :osx, '10.15'
+
+# Disable CocoaPods analytics
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner.xcodeproj'
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  
+  # Pin sqlite3 to prevent CDN/resolution loops
+  pod 'sqlite3', '~> 3.46'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_macos_build_settings(target)
+    
+    # Force deployment target to prevent version mismatch errors
+    target.build_configurations.each do |config|
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.15'
+    end
+  end
+end
