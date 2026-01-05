@@ -9,7 +9,7 @@ ARCH="x86_64"
 BUILD_DIR="../build/linux/x64/release/bundle"
 RPM_BUILD_ROOT="${PWD}/rpmbuild"
 
-echo "🚀 Starting RPM creation for $APP_NAME v$VERSION..."
+echo "Starting RPM creation for $APP_NAME v$VERSION..."
 
 # 1. Prepare RPM Build Structure
 rm -rf "$RPM_BUILD_ROOT"
@@ -23,12 +23,12 @@ DEST_DIR="$RPM_BUILD_ROOT/BUILDROOT/${APP_NAME}-${VERSION}-${RELEASE}.${ARCH}"
 
 # 2. Check Build Artifacts
 if [ ! -d "$BUILD_DIR" ]; then
-    echo "❌ Build directory not found! Please run 'flutter build linux' first."
+    echo "Error: Build directory not found! Please run 'flutter build linux' first."
     exit 1
 fi
 
 # 3. Copy Files to Build Root
-echo "📦 Copying files to build root..."
+echo "Copying files to build root..."
 cp -r "$BUILD_DIR/"* "$DEST_DIR/usr/local/lib/$APP_NAME/"
 
 # 4. Create Symbolic Link
@@ -55,7 +55,7 @@ else
 fi
 
 # 7. Create SPEC File
-echo "📄 Generaring SPEC file..."
+echo "Generating SPEC file..."
 cat > "$RPM_BUILD_ROOT/SPECS/$APP_NAME.spec" <<EOF
 Name:       $APP_NAME
 Version:    $VERSION
@@ -63,7 +63,7 @@ Release:    $RELEASE
 Summary:    TVMax Media Player
 License:    MIT
 Group:      Applications/Multimedia
-Arch:       $ARCH
+BuildArch:  $ARCH
 Requires:   gtk3, mpv-libs, xz-libs, glib2
 
 %description
@@ -89,14 +89,14 @@ Education project.
 EOF
 
 # 8. Run RPMBuild
-echo "🔨 Running rpmbuild..."
+echo "Running rpmbuild..."
 rpmbuild --define "_topdir $RPM_BUILD_ROOT" \
          --buildroot "$DEST_DIR" \
          -bb "$RPM_BUILD_ROOT/SPECS/$APP_NAME.spec"
 
 # 9. Move Artifact
 mv "$RPM_BUILD_ROOT/RPMS/$ARCH/"*.rpm .
-echo "✅ RPM created successfully."
+echo "RPM created successfully."
 
 # Cleanup
 rm -rf "$RPM_BUILD_ROOT"
