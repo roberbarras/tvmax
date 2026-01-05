@@ -64,7 +64,7 @@ Summary:    TVMax Media Player
 License:    MIT
 Group:      Applications/Multimedia
 BuildArch:  $ARCH
-Requires:   gtk3, mpv-libs, xz-libs, glib2
+Requires:   gtk3, (mpv-libs or libmpv1), (xz-libs or liblzma5), (glib2 or libglib-2_0-0)
 
 %description
 A powerful media player for streaming content.

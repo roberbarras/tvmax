@@ -41,7 +41,7 @@ Version: $VERSION
 Section: video
 Priority: optional
 Architecture: $ARCH
-Depends: libgtk-3-0, libmpv1 (>= 0.29.0), liblzma5, fuse
+Depends: libgtk-3-0, libmpv1 (>= 0.29.0) | libmpv2, liblzma5
 Installed-Size: $SIZE
 Maintainer: TVMax Team <info@tvmax.com>
 Description: A powerful media player for streaming content.

@@ -1,4 +1,4 @@
-# TVMax (Unofficial Atresplayer Client)
+# TVMax (Cliente No Oficial Atresplayer)
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
@@ -9,30 +9,27 @@
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-Aplicación multiplataforma (**Android, iOS, Linux, macOS y Windows**) desarrollada como proyecto **educativo** para explorar las capacidades de **Flutter** en el desarrollo de aplicaciones móviles y de escritorio.
+Aplicación multiplataforma (**Android, iOS, Linux, macOS y Windows**) desarrollada como proyecto educativo para explorar las capacidades de Flutter en el desarrollo de aplicaciones móviles y de escritorio.
 
-Este proyecto tiene como objetivo principal el **aprendizaje**:
-*   Arquitectura Limpia (Clean Architecture) en Flutter 3.
+Este proyecto tiene como objetivo principal el aprendizaje de:
+*   Arquitectura Limpia (Clean Architecture).
 *   Consumo y gestión de APIs REST complejas.
 *   Manejo avanzado de Streams y descargas en segundo plano.
 *   Integración nativa (FFI) con reproductores de vídeo (VLC/MediaKit).
 
-Diseñada para ser rápida, privada y funcional, ofreciendo una experiencia premium sin coste adicional (usando tu propia cuenta o contenido gratuito).
+Diseñada para ser rápida, privada y funcional, ofreciendo una experiencia fluida sin coste adicional, utilizando tu propia cuenta o contenido gratuito.
 
 ---
 
----
+## Roadmap
 
-## 🗺️ Roadmap (Próximamente)
-
-*   **🍎 Apple Ecosystem (iOS / macOS):**
-    *   La base de código de Flutter ya es compatible con iOS y macOS.
-    *   Sin embargo, **actualmente no dispongo de la infraestructura de hardware necesaria (Mac) para compilar y firmar los binarios**.
-    *   En cuanto sea posible, se añadirán los ejecutables `.ipa` y `.dmg` a las Releases.
+*   **Ecosistema Apple (iOS / macOS):**
+    *   Actualmente se ofrecen binarios **sin firmar** (.app/.zip) generados automáticamente por GitHub Actions.
+    *   Para instalarlos en dispositivos físicos, es necesario realizar el proceso de firma manual o utilizar herramientas como AltStore (iOS) o permitir la ejecución de apps sin firmar (macOS).
 
 ---
 
-## 📥 Descargas (Última Versión v1.0)
+## Descargas (Versión v1.0)
 
 Elige la versión adecuada para tu dispositivo:
 
@@ -40,73 +37,88 @@ Elige la versión adecuada para tu dispositivo:
 | :--- | :--- | :--- | :--- |
 | **Android (Moderno)** | `tvmax-arm64-v8a-release.apk` | Para móviles actuales (últimos 5-6 años). Mayor rendimiento. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-arm64-v8a-release.apk) |
 | **Android (Antiguo)** | `tvmax-armeabi-v7a-release.apk` | Para móviles antiguos o gama baja. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-armeabi-v7a-release.apk) |
-| **Windows** | `tvmax-full-x64-setup.exe` | Instalador completo. Incluye todo lo necesario (no requiere configurar nada). | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-full-x64-setup.exe) |
-| **Linux (Recomendado)**| `tvmax-full.AppImage` | Versión autónoma. Incluye `ffmpeg` y `yt-dlp`. Funciona en cualquier distro. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-full.AppImage) |
-| **Linux (Ligero)** | `tvmax-lite.AppImage` | Versión reducida (~18MB). Requiere que tengas `ffmpeg` instalado en tu sistema. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-lite.AppImage) |
+| **Windows** | `tvmax-full-x64-setup.exe` | Instalador completo. Incluye dependencias necesarias. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-full-x64-setup.exe) |
+| **Linux (Recomendado)**| `tvmax-full.AppImage` | Versión autónoma. Incluye ffmpeg y yt-dlp. Funciona en cualquier distribución. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-full.AppImage) |
+| **Linux (Ligero)** | `tvmax-lite.AppImage` | Versión reducida (~18MB). Requiere tener ffmpeg instalado. | [Descargar](https://github.com/roberbarras/tvmax/releases/download/1.0/tvmax-lite.AppImage) |
+| **macOS (Intel/M1)** | `tvmax-macos-unsigned.zip` | Binario (.app) sin firmar. | [Descargar](https://github.com/roberbarras/tvmax/actions/runs/20715785518/artifacts/5024390753) |
+| **iOS (Experimental)** | `tvmax-ios-unsigned.zip` | App sin firmar (.app). Requiere firma manual. | [Descargar](https://github.com/roberbarras/tvmax/actions/runs/20715785518/artifacts/5024363506) |
 
 ---
 
-## ✨ Características Principales
+## Características Principales
 
-*   **⚡ Rendimiento Optimizado**:
-    *   **Modo Eco**: Detecta automáticamente PCs lentos (antiguos) y ajusta la velocidad de carga para evitar bloqueos.
-    *   **Gestión de Memoria**: Carga de imágenes optimizada para consumir un 70% menos de RAM en listas grandes.
-*   **⬇️ Descargas Inteligentes**:
-    *   **Watchdog**: Si una descarga se queda "pegada" (común en redes inestables), la app la detecta y reinicia automáticamente sin que tengas que hacer nada.
-    *   **Portabilidad**: Los vídeos se descargan en formato `.mp4` compatible con cualquier reproductor.
-*   **🎮 Reproductor Híbrido**:
-    *   Soporte para subtítulos y selección de calidad (1080p, 720p...).
-    *   **Fallback Automático (Linux)**: Si tu tarjeta gráfica falla (pantallazo azul), el reproductor cambia solo a modo software para no crashear.
-*   **🍪 Gestión de Sesión**:
-    *   Usa tu propia cuenta (Free o Premium) copiando tu cookie de sesión.
+*   **Rendimiento Optimizado**:
+    *   **Modo Eco**: Detecta automáticamente equipos con recursos limitados y ajusta la carga gráfica.
+    *   **Gestión de Memoria**: Carga de imágenes optimizada para reducir el consumo de RAM.
+*   **Descargas Inteligentes**:
+    *   **Watchdog**: Sistema de recuperación automática de descargas interrumpidas o fallidas por inestabilidad de red.
+    *   **Portabilidad**: Los vídeos se descargan en formato .mp4 estándar.
+*   **Reproductor Híbrido**:
+    *   Soporte para subtítulos y selección de calidad manual o automática.
+    *   **Fallback Automático (Linux)**: Cambio automático a renderizado por software en caso de fallo de drivers gráficos.
+*   **Gestión de Sesión**:
+    *   Posibilidad de utilizar cuenta propia (Free o Premium) mediante inyección de cookie de sesión.
 
 ---
 
-## 🛠️ Requisitos e Instalación
+## Requisitos e Instalación
 
 ### Android
 *   **Versión:** Android 7.0 o superior.
-*   **Instalación:** Descarga el APK, abre el archivo y acepta "Instalar aplicaciones desconocidas" si se te solicita.
+*   **Instalación:** Descarga e instala el archivo APK. Es posible que debas autorizar la instalación desde orígenes desconocidos.
 
 ### Windows
 *   **Requisitos:** Windows 10/11 (64 bits).
-*   **Instalación:** Ejecuta el instalador `setup.exe`. El programa se encargará de configurar las herramientas de descarga (`yt-dlp`) automáticamente.
+*   **Instalación:** Ejecuta el instalador `setup.exe`. El asistente configurará todas las dependencias automáticamente.
 
 ### Linux
-*   **Full (`.AppImage`)**:
+*   **Full (.AppImage)**:
     1.  Descarga el archivo.
-    2.  Dale permisos de ejecución: `chmod +x tvmax-full.AppImage`
-    3.  Ejecuta con doble clic.
-*   **Lite (`.AppImage`)**:
-    *   Igual que el anterior, pero asegúrate de tener instalado: `sudo apt install ffmpeg python3`
+    2.  Otorga permisos de ejecución: `chmod +x tvmax-full.AppImage`
+    3.  Ejecuta el archivo.
+*   **Lite (.AppImage)**:
+    *   Requiere tener instalados `ffmpeg` y `python3` en el sistema (`sudo apt install ffmpeg python3` en Debian/Ubuntu).
+
+### macOS
+*   **Nota Importante:** Al no estar firmada con un certificado de desarrollador de Apple (requiere pago anual), el sistema bloqueará la ejecución por defecto ("Software malicioso no verificado").
+*   **Instalación:**
+    1.  Descomprime el archivo ZIP.
+    2.  Arrastra la app a la carpeta Aplicaciones.
+    3.  Al abrirla por primera vez, si muestra el error de seguridad, ve a **Preferencias del Sistema > Seguridad y Privacidad** y pulsa en "Abrir de todas formas".
+    4.  Alternativamente, haz clic derecho sobre la app y selecciona **Abrir**, y confirma en el diálogo emergente.
+
+### iOS
+*   **Nota Importante:** Para instalar aplicaciones fuera de la App Store (.ipa/.app) es necesario firmarlas.
+*   **Instalación (Sideloading):**
+    *   **AltStore (Recomendado):** Utiliza AltServer en tu PC/Mac para instalar la app en tu iPhone/iPad (requiere renovar cada 7 días).
+    *   **Certificado de Desarrollador:** Si dispones de uno, puedes firmar y desplegar la app usando Xcode o herramientas similares.
 
 ---
 
----
+## Manual de Uso Rápido
 
-## 📖 Manual de Uso Rápido
-
-### 1. Configuración Inicial (¡Importante!)
-Para ver contenido Premium, necesitas tu **Cookie de Sesión**:
-1.  Ve a **Ajustes** dentro de la App.
-2.  Pega el valor de la cookie `Cookie` de atresplayer.com (puedes obtenerla desde las herramientas de desarrollador de tu navegador, F12 -> Red).
-3.  Guarda y reinicia.
+### 1. Configuración Inicial
+Para acceder a contenido restringido, es necesario configurar la Cookie de Sesión:
+1.  Accede a la web oficial desde un navegador de escritorio.
+2.  Inicia sesión con tus credenciales.
+3.  Abre las Herramientas de Desarrollador (F12) y localiza la petición principal en la pestaña **Red**.
+4.  Copia el valor del encabezado `Cookie`.
+5.  En TVMax, ve a **Ajustes** y pega el valor en el campo correspondiente.
+6.  Guarda y reinicia la aplicación.
 
 ### 2. Reproducción
-*   **Calidad:** Pulsa el icono **HQ** para cambiar entre 1080p, 720p, etc.
-*   **Subtítulos:** Pulsa **CC** para activarlos.
-*   **Problemas:** Si en Linux ves una pantalla azul, espera 2 segundos. La app cambiará sola a "Modo Seguro".
+*   **Calidad:** Icono HQ para selección manual (1080p, 720p, etc).
+*   **Subtítulos:** Icono CC para activar/desactivar.
 
 ### 3. Descargas
-*   Pulsa el botón de descarga en cualquier episodio.
-*   Si la descarga se detiene, el sistema la reanudará automáticamente.
+*   Utiliza el botón de descarga en la ficha del episodio.
+*   El sistema gestionará la descarga en segundo plano y recuperará errores automáticamente.
 
-ℹ️ **[Ver Guía de Usuario Completa (USER_GUIDE.md)](USER_GUIDE.md)** para detalles avanzados y solución de problemas.
-
----
-
-> [!NOTE]
-> **Proyecto Educativo:** Esta aplicación no tiene relación oficial con Atresmedia. Se ha creado únicamente para demostrar cómo estructurar una aplicación moderna en Flutter que interactúa con servicios web reales de alta demanda.
+Para más detalles, consulta la **[Guía de Usuario (USER_GUIDE.md)](USER_GUIDE.md)**.
 
 ---
-*Hecho con ❤️ y Flutter.*
+
+> **Aviso:** Este es un proyecto estrictamente educativo sin ánimo de lucro. La aplicación no aloja contenido ni elude sistemas de protección DRM. El usuario es responsable de utilizar sus propias credenciales de acceso legítimas.
+
+---
+Creado con Flutter.
