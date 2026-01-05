@@ -6,7 +6,7 @@ Este manual detalla todas las funcionalidades, configuración y solución de pro
 
 ## 1. 🚀 Introducción
 
-TVMax es un cliente no oficial de código abierto para la plataforma Atresplayer. Su objetivo es ofrecer una experiencia **rápida** y **privada**.
+TVMax es un cliente no oficial de código abierto para la plataforma Atresplayer. Su objetivo es ofrecer una experiencia **rápida**, **sin publicidad** y **privada**, permitiendo descargar contenido para verlo offline en cualquier lugar.
 
 ---
 
