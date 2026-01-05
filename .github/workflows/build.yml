@@ -134,9 +134,7 @@ jobs:
         run: flutter build windows --release
 
       - name: Setup Inno Setup
-        uses: Minionguyjosh/setup-inno-setup@v1
-        with:
-          version: "6.2.1"
+        run: choco install innosetup
 
       - name: Compile Installer (Setup.exe)
         run: iscc packaging/installer.iss
