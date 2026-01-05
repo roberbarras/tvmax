@@ -10,7 +10,7 @@ jobs:
   # ANDROID BUILD
   # -----------------------------------------------------------------------------
   build-android:
-    name: Build Android APKs
+    name: 🤖 Build Android APKs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
   # LINUX BUILD
   # -----------------------------------------------------------------------------
   build-linux:
-    name: Build Linux AppImage
+    name: 🐧 Build Linux AppImage
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -100,7 +100,7 @@ jobs:
   # WINDOWS BUILD
   # -----------------------------------------------------------------------------
   build-windows:
-    name: Build Windows Exe
+    name: 🪟 Build Windows Exe
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -152,7 +152,7 @@ jobs:
   # They are useful for checking compilation errors and testing on local Simulators.
   # To install on real iOS devices, you need a paid Apple Developer Account.
   build-apple:
-    name: Build macOS & iOS
+    name: 🍎 Build macOS & iOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -175,7 +175,8 @@ jobs:
       - name: Zip macOS App
         run: |
           cd build/macos/Build/Products/Release
-          zip -r tvmax-macos-unsigned.zip tvmax.app
+          ls -la # Debug: Show what was actually built
+          zip -r tvmax-macos-unsigned.zip *.app
 
       # iOS Build (Unsigned .app for Simulator)
       # Building .ipa requires signing. Building .app is safer for CI without keys.
