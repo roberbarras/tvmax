@@ -3,11 +3,13 @@
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=apple&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-Aplicación multiplataforma (Android, Linux, Windows) desarrollada como proyecto **educativo** para explorar las capacidades de **Flutter** en desarrollo de escritorio y móvil.
+Aplicación multiplataforma (**Android, iOS, Linux, macOS y Windows**) desarrollada como proyecto **educativo** para explorar las capacidades de **Flutter** en el desarrollo de aplicaciones móviles y de escritorio.
 
 Este proyecto tiene como objetivo principal el **aprendizaje**:
 *   Arquitectura Limpia (Clean Architecture) en Flutter 3.
