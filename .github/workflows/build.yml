@@ -10,7 +10,7 @@ jobs:
   # ANDROID BUILD
   # -----------------------------------------------------------------------------
   build-android:
-    name: 🤖 Build Android APKs
+    name: Build Android APKs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
   # LINUX BUILD
   # -----------------------------------------------------------------------------
   build-linux:
-    name: 🐧 Build Linux AppImage
+    name: Build Linux AppImage
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -100,7 +100,7 @@ jobs:
   # WINDOWS BUILD
   # -----------------------------------------------------------------------------
   build-windows:
-    name: 🪟 Build Windows Exe
+    name: Build Windows Exe
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -152,7 +152,7 @@ jobs:
   # They are useful for checking compilation errors and testing on local Simulators.
   # To install on real iOS devices, you need a paid Apple Developer Account.
   build-apple:
-    name: 🍎 Build macOS & iOS
+    name: Build macOS & iOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -162,10 +162,15 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Initialize iOS
+        # Fix for "Application not configured for iOS"
+        # We run create . to generate the iOS Runner folder if missing
+        run: flutter create --platforms=ios .
+
       - name: Get Dependencies
         run: flutter pub get
 
-      # macOS Build (Unsigned)
+      # macOS Build
       - name: Enable macOS Desktop
         run: flutter config --enable-macos-desktop
 
@@ -179,15 +184,14 @@ jobs:
           zip -r tvmax-macos-unsigned.zip *.app
 
       # iOS Build (Unsigned .app for Simulator)
-      # Building .ipa requires signing. Building .app is safer for CI without keys.
       - name: Build iOS (.app)
+        # --no-codesign is valid for iOS builds
         run: flutter build ios --release --no-codesign
 
       - name: Zip iOS App
         run: |
           cd build/ios/iphoneos
           # It might be in iphoneos or iphonesimulator depending on sdk used.
-          # release build defaults to device usually.
           zip -r tvmax-ios-unsigned.zip Runner.app
 
       - name: Upload Apple Artifacts
@@ -197,4 +201,3 @@ jobs:
           path: |
             build/macos/Build/Products/Release/tvmax-macos-unsigned.zip
             build/ios/iphoneos/tvmax-ios-unsigned.zip
-
