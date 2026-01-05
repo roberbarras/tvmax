@@ -163,13 +163,10 @@ jobs:
           path: dist/*.exe
 
   # -----------------------------------------------------------------------------
-  # APPLE BUILD (macOS & iOS)
+  # MACOS BUILD
   # -----------------------------------------------------------------------------
-  # Note: These builds are UNSIGNED because we don't have a Distribution Certificate.
-  # They are useful for checking compilation errors and testing on local Simulators.
-  # To install on real iOS devices, you need a paid Apple Developer Account.
-  build-apple:
-    name: Build macOS & iOS
+  build-macos:
+    name: Build macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -179,12 +176,9 @@ jobs:
         with:
           channel: 'stable'
 
-
-
       - name: Get Dependencies
         run: flutter pub get
 
-      # macOS Build
       - name: Enable macOS Desktop
         run: flutter config --enable-macos-desktop
 
@@ -197,7 +191,29 @@ jobs:
           ls -la # Debug: Show what was actually built
           zip -r tvmax-macos-unsigned.zip *.app
 
-      # iOS Build (Unsigned .app for Simulator)
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-unsigned-build
+          path: build/macos/Build/Products/Release/tvmax-macos-unsigned.zip
+
+  # -----------------------------------------------------------------------------
+  # iOS BUILD
+  # -----------------------------------------------------------------------------
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Get Dependencies
+        run: flutter pub get
+
       - name: Build iOS (.app)
         # --no-codesign is valid for iOS builds
         run: flutter build ios --release --no-codesign
@@ -208,10 +224,8 @@ jobs:
           # It might be in iphoneos or iphonesimulator depending on sdk used.
           zip -r tvmax-ios-unsigned.zip Runner.app
 
-      - name: Upload Apple Artifacts
+      - name: Upload iOS Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: apple-unsigned-builds
-          path: |
-            build/macos/Build/Products/Release/tvmax-macos-unsigned.zip
-            build/ios/iphoneos/tvmax-ios-unsigned.zip
+          name: ios-unsigned-build
+          path: build/ios/iphoneos/tvmax-ios-unsigned.zip
