@@ -50,7 +50,7 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev wget fuse libasound2-dev libmpv-dev mpv
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev wget fuse libasound2-dev libmpv-dev mpv rpm
 
       - name: Download External Binaries (yt-dlp, ffmpeg)
         # We need these for the "Full" version
@@ -90,11 +90,28 @@ jobs:
           ./create_appimage.sh
           cd ..
 
-      - name: Upload AppImages
+      - name: Package DEB (Installer)
+        run: |
+          cd packaging
+          chmod +x create_deb.sh
+          ./create_deb.sh
+          cd ..
+
+      - name: Package RPM (Fedora/RedHat)
+        run: |
+          cd packaging
+          chmod +x create_rpm.sh
+          ./create_rpm.sh
+          cd ..
+
+      - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-appimages
-          path: packaging/*.AppImage
+          name: linux-artifacts
+          path: |
+            packaging/tvmax*.AppImage
+            packaging/*.deb
+            packaging/*.rpm
 
   # -----------------------------------------------------------------------------
   # WINDOWS BUILD

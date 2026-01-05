@@ -10,6 +10,7 @@ ICON_PATH="../assets/icon/icon_master.png"
 echo "🚀 Starting AppImage creation for $APP_NAME..."
 
 # 1. Prepare AppDir Structure
+rm -f *.AppImage # Clean up old artifacts (including legacy names)
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/usr/bin"
 
