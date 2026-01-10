@@ -186,7 +186,7 @@ jobs:
           channel: 'stable'
 
       - name: Configure Platform
-        run: dart scripts/set_platform.dart desktop
+        run: dart scripts/set_platform.dart mobile
 
       - name: Get Dependencies
         run: flutter pub get

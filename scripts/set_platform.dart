@@ -15,7 +15,7 @@ void main(List<String> args) {
     exit(1);
   }
 
-  print('Switching implementation to: ${isMobile ? "Mobile (New)" : "Desktop (Full GPL)"}...');
+  print('Switching implementation to: ${isMobile ? "Modern (Android/iOS/macOS)" : "Legacy (Linux/Windows)"}...');
 
   // 1. Update pubspec.yaml
   updatePubspec(isMobile);
@@ -25,11 +25,11 @@ void main(List<String> args) {
 
   // 3. Run pub get
   print('Running flutter pub get...');
-  final result = Process.runSync('flutter', ['pub', 'get']);
+  final result = Process.runSync('flutter', ['pub', 'get'], runInShell: true);
   stdout.write(result.stdout);
   stderr.write(result.stderr);
 
-  print('Done! Ready for ${isMobile ? "Android/iOS" : "Linux/Windows/macOS"}.');
+  print('Done! Ready for ${isMobile ? "Android/iOS/macOS" : "Linux/Windows"}.');
 }
 
 void updatePubspec(bool isMobile) {
