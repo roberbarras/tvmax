@@ -5,7 +5,7 @@ import '../../domain/usecases/download_video.dart';
 import '../../domain/entities/download_item.dart';
 import '../../data/datasources/player_local_data_source.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:tvflix/core/utils/ffmpeg_shim.dart';
 import '../../../../core/error/failures.dart';
 
 import '../../../settings/presentation/providers/settings_provider.dart';

@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'package:tvflix/core/utils/ffmpeg_shim.dart';
 import 'player_local_data_source.dart';
 import '../../../../core/error/exceptions.dart';
 

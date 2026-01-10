@@ -26,6 +26,9 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Configure Platform
+        run: dart scripts/set_platform.dart mobile
+
       - name: Get Dependencies
         run: flutter pub get
 
@@ -71,6 +74,9 @@ jobs:
 
       - name: Enable Desktop
         run: flutter config --enable-linux-desktop
+
+      - name: Configure Platform
+        run: dart scripts/set_platform.dart desktop
 
       - name: Get Dependencies
         run: flutter pub get
@@ -144,6 +150,9 @@ jobs:
           Remove-Item ffmpeg.zip
           Remove-Item ffmpeg_temp -Recurse
 
+      - name: Configure Platform
+        run: dart scripts/set_platform.dart desktop
+
       - name: Get Dependencies
         run: flutter pub get
 
@@ -175,6 +184,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+
+      - name: Configure Platform
+        run: dart scripts/set_platform.dart desktop
 
       - name: Get Dependencies
         run: flutter pub get
@@ -210,6 +222,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+
+      - name: Configure Platform
+        run: dart scripts/set_platform.dart mobile
 
       - name: Get Dependencies
         run: flutter pub get

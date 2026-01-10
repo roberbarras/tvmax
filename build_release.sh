@@ -68,6 +68,9 @@ echo -e "${BLUE}📦 getting dependencies...${NC}"
 flutter pub get
 
 # 3. Build Linux
+echo -e "${BLUE}🐧 Configuring for Desktop (FFmpeg GPL)...${NC}"
+dart scripts/set_platform.dart desktop
+
 echo -e "${BLUE}🐧 Building Linux Release...${NC}"
 flutter config --enable-linux-desktop
 flutter build linux --release
@@ -85,6 +88,9 @@ mv packaging/tvmax-lite.AppImage dist/
 echo -e "${GREEN}✅ AppImages (Full & Lite) created in dist/${NC}"
 
 # 5. Build Android (Split APKs)
+echo -e "${BLUE}🤖 Configuring for Mobile (FFmpeg New)...${NC}"
+dart scripts/set_platform.dart mobile
+
 echo -e "${BLUE}🤖 Building Android APKs (Split per ABI)...${NC}"
 flutter build apk --release --split-per-abi
 
