@@ -5,6 +5,8 @@ import '../../../programs/presentation/widgets/program_card.dart';
 import '../../../episodes/presentation/pages/episodes_screen.dart';
 import '../../../episodes/presentation/providers/episodes_provider.dart';
 import '../../../../injection_container.dart';
+import '../../../../core/providers/navigation_provider.dart';
+import '../../../../core/presentation/widgets/manual_focus_grid.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -14,12 +16,21 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ManualFocusGridState> _gridGlobalKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FavoritesProvider>().loadFavorites();
     });
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -45,29 +56,50 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             );
           }
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 200,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: provider.favorites.length,
-            itemBuilder: (context, index) {
-              final program = provider.favorites[index];
-              return ProgramCard(
-                program: program,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChangeNotifierProvider(
-                         create: (_) => sl<EpisodesProvider>(),
-                         child: EpisodesScreen(program: program),
-                      ),
-                    ),
-                  );
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              const maxExtent = 200.0;
+              // Padding 16 on each side -> 32 total
+              const padding = 32.0;
+              const crossAxisSpacing = 16.0;
+              
+              final availableWidth = width - padding;
+              int crossAxisCount = (availableWidth / (maxExtent + crossAxisSpacing)).ceil();
+              if (crossAxisCount < 1) crossAxisCount = 1;
+
+              return ManualFocusGrid(
+                key: _gridGlobalKey,
+                items: provider.favorites,
+                crossAxisCount: crossAxisCount,
+                itemAspectRatio: 0.7,
+                crossAxisSpacing: crossAxisSpacing,
+                mainAxisSpacing: 16.0,
+                scrollController: _scrollController,
+                // On Favorites, Exit Up just stops at top (standard) or we can focus AppBar if it had actions.
+                // It has no actions, so we do nothing (default grid behavior will stop).
+                onExitDown: () {
+                   final nav = context.read<NavigationProvider>();
+                   if (nav.bottomBarFocusNode.canRequestFocus) {
+                      nav.bottomBarFocusNode.requestFocus();
+                   }
+                },
+                itemBuilder: (context, index, program, focusNode) {
+                   return ProgramCard(
+                     program: program,
+                     focusNode: focusNode,
+                     onTap: () {
+                       Navigator.push(
+                         context,
+                         MaterialPageRoute(
+                           builder: (_) => ChangeNotifierProvider(
+                              create: (_) => sl<EpisodesProvider>(),
+                              child: EpisodesScreen(program: program),
+                           ),
+                         ),
+                       );
+                     },
+                   );
                 },
               );
             },

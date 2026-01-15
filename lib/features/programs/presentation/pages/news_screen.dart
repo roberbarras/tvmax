@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../injection_container.dart';
 import '../../../episodes/presentation/pages/episodes_screen.dart';
 import '../../../episodes/presentation/providers/episodes_provider.dart';
 import '../providers/news_provider.dart';
+import '../../../../core/providers/navigation_provider.dart';
 import '../widgets/program_card.dart';
+import '../../../../core/presentation/widgets/manual_focus_grid.dart';
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
@@ -16,6 +19,11 @@ class NewsScreen extends StatefulWidget {
 
 class _NewsScreenState extends State<NewsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocusNode = FocusNode();
+  final GlobalKey<ManualFocusGridState> _gridGlobalKey = GlobalKey(); 
+  
+  Timer? _searchHoldTimer;
+  bool _isSearchLongPressTriggered = false;
 
   @override
   void initState() {
@@ -32,6 +40,7 @@ class _NewsScreenState extends State<NewsScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchHoldTimer?.cancel();
     super.dispose();
   }
 
@@ -55,15 +64,53 @@ class _NewsScreenState extends State<NewsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          decoration: const InputDecoration(
-             hintText: 'Buscar noticias...',
-             border: InputBorder.none,
-             prefixIcon: Icon(Icons.search),
-          ),
-          onChanged: (value) {
-             _onSearchChanged(value);
+        title: Focus(
+          onKey: (node, event) {
+            if (event is RawKeyDownEvent) {
+               if (event.repeat) return KeyEventResult.ignored;
+
+               if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                   _isSearchLongPressTriggered = false;
+                   _searchHoldTimer?.cancel();
+                   _searchHoldTimer = Timer(const Duration(milliseconds: 500), () {
+                       _isSearchLongPressTriggered = true;
+                       _gridGlobalKey.currentState?.resetFocus();
+                   });
+                   return KeyEventResult.handled;
+               }
+               
+               if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                   FocusScope.of(context).nextFocus();
+                   return KeyEventResult.handled;
+               }
+            } else if (event is RawKeyUpEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    if (_searchHoldTimer != null && _searchHoldTimer!.isActive) {
+                        _searchHoldTimer!.cancel();
+                        if (!_isSearchLongPressTriggered) {
+                            _gridGlobalKey.currentState?.restoreFocus(); 
+                        }
+                    }
+                    return KeyEventResult.handled;
+                }
+            }
+            return KeyEventResult.ignored;
           },
+          child: TextField(
+            focusNode: _searchFocusNode,
+            textInputAction: TextInputAction.next,
+             onSubmitted: (_) {
+               _gridGlobalKey.currentState?.restoreFocus();
+            },
+            decoration: const InputDecoration(
+               hintText: 'Buscar noticias...',
+               border: InputBorder.none,
+               prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: (value) {
+               _onSearchChanged(value);
+            },
+          ),
         ),
         actions: [
           IconButton(
@@ -108,44 +155,53 @@ class _NewsScreenState extends State<NewsScreen> {
             onRefresh: () async {
               await provider.fetchNews();
             },
-            child: Column(
-              children: [
-                Expanded(
-                  child: GridView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 200,
-                      childAspectRatio: 0.7,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: provider.news.length,
-                    itemBuilder: (context, index) {
-                      final program = provider.news[index];
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                const maxExtent = 200.0;
+                const crossAxisSpacing = 16.0;
+                const padding = 32.0; 
+                
+                final availableWidth = width - padding;
+                int crossAxisCount = (availableWidth / (maxExtent + crossAxisSpacing)).ceil();
+                if (crossAxisCount < 1) crossAxisCount = 1;
+
+                return ManualFocusGrid(
+                   key: _gridGlobalKey,
+                   items: provider.news,
+                   crossAxisCount: crossAxisCount,
+                   itemAspectRatio: 0.7,
+                   crossAxisSpacing: crossAxisSpacing,
+                   mainAxisSpacing: 16.0,
+                   scrollController: _scrollController,
+                   onExitUp: () {
+                      FocusScope.of(context).requestFocus(_searchFocusNode);
+                   },
+                   onExitDown: () {
+                      final nav = context.read<NavigationProvider>();
+                      if (nav.bottomBarFocusNode.canRequestFocus) {
+                         nav.bottomBarFocusNode.requestFocus();
+                      }
+                   },
+                   itemBuilder: (context, index, program, focusNode) {
                       return ProgramCard(
-                        program: program,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChangeNotifierProvider(
-                                 create: (_) => sl<EpisodesProvider>(),
-                                 child: EpisodesScreen(program: program),
-                              ),
-                            ),
-                          );
-                        },
+                         program: program,
+                         focusNode: focusNode,
+                         onTap: () {
+                             Navigator.push(
+                               context,
+                               MaterialPageRoute(
+                                 builder: (_) => ChangeNotifierProvider(
+                                    create: (_) => sl<EpisodesProvider>(),
+                                    child: EpisodesScreen(program: program),
+                                 ),
+                               ),
+                             );
+                         },
                       );
-                    },
-                  ),
-                ),
-                if (provider.isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
-                  ),
-              ],
+                   },
+                );
+              },
             ),
           );
         },

@@ -10,6 +10,7 @@ import '../../../../core/providers/navigation_provider.dart';
 import '../../../../features/player/presentation/providers/downloads_provider.dart';
 import '../../../../features/player/presentation/pages/video_player_screen.dart';
 import '../widgets/availability_banner.dart';
+import '../../../../core/utils/m3u8_parser.dart';
 
 class EpisodesScreen extends StatefulWidget {
   final Program program;
@@ -226,15 +227,81 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
         final url = await episodesProvider.fetchStreamingUrl(episode.id);
         
         if (url != null) {
-           final fileName = '${widget.program.title} - ${episode.title}';
-           downloadsProvider.addDownload(episode.id, fileName, url);
+           // 1. Fetch Qualities
+           if (!mounted) return;
+           
+           // Show loading indicator
+           showDialog(
+             context: context,
+             barrierDismissible: false,
+             builder: (_) => const Center(child: CircularProgressIndicator()),
+           );
+           
+           final qualities = await M3u8QualityParser.getQualities(url);
            
            if (!mounted) return;
-           _showDownloadNotification(context, widget.program.title, episode.title);
+           Navigator.pop(context); // Dismiss loading
+           
+           if (qualities.isNotEmpty) {
+              // 2. Show Selection Dialog
+              _showQualitySelectionDialog(context, episode, qualities, downloadsProvider);
+           } else {
+              // Fallback to master URL if no qualities found (or not master playlist)
+              _triggerDownload(context, episode, url, "Auto", downloadsProvider);
+           }
         }
       } catch (e) {
         print('Error starting download: $e');
       }
+  }
+
+  void _showQualitySelectionDialog(
+      BuildContext context, 
+      dynamic episode, 
+      List<VideoQuality> qualities, 
+      DownloadsProvider downloadsProvider
+  ) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Text('Seleccionar Calidad', style: TextStyle(color: Colors.white)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: qualities.length,
+              itemBuilder: (context, index) {
+                final q = qualities[index];
+                return ListTile(
+                  title: Text(q.label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Text(q.description, style: const TextStyle(color: Colors.white70)),
+                  trailing: const Icon(Icons.download, color: Colors.orange),
+                  onTap: () {
+                     Navigator.pop(context);
+                     _triggerDownload(context, episode, q.url, q.label, downloadsProvider);
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        ),
+      );
+  }
+
+  void _triggerDownload(BuildContext context, dynamic episode, String url, String qualityLabel, DownloadsProvider provider) {
+       final fileName = '${widget.program.title} - ${episode.title} [$qualityLabel]';
+       provider.addDownload(episode.id, fileName, url);
+       
+       if (mounted) {
+         _showDownloadNotification(context, widget.program.title, episode.title);
+       }
   }
 
   void _showDownloadNotification(BuildContext context, String programTitle, String episodeTitle) {

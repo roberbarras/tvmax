@@ -63,36 +63,14 @@ class ProgramsProvider extends ChangeNotifier {
       failure = null;
       _isLoadingBackground = false; 
       
-      // Load favorites FIRST
-      // Assumption: Program entity for 'Programs' doesn't use a specific categoryId filter in the classic sense 
-      // because 'Programs' in this app seems to be a catch-all or specific 'Programs' section?
-      // Wait, getPrograms USES a categoryId?
-      // In `programs_provider.dart`, getPrograms is called with default params!
-      // `GetProgramsParams(page: ...)` -> default `formatId`? 
-      // Checking `GetProgramsParams` definition/defaults would be wise, but assuming 'Programs' section logic:
-      // If we don't have a category filter here, we might just show ALL favorites? 
-      // Or maybe we treat "Programs" as everything not Series/Movies?
-      // For now, let's assume we want to pin favorites that match the programs list. 
-      // Since `ProgramsProvider` fetches "Search" row without mainChannel?
+      // 1. Initial Load: Start with Favorites
+      final localFavs = favoritesProvider.favorites;
+      _allPrograms = List.from(localFavs);
       
-      // Actually, looking at `ProgramsRemoteDataSource` logs earlier: 
-      // `categoryId=5a6a...` etc.
-      // `ProgramsProvider` is simpler. 
-      // Let's just try to merge ALL favorites if we can't filter, or filtering by a known ID if we had one.
-      // User request: "los programas favoritos aparezcan en primer lugar". 
-      // Since we don't know the exact category ID for the "Programs" tab without looking deeper,
-      // We will rely on `favoritesProvider.favorites` and deduplicate.
-      // BUT `ProgramsProvider` (generic) might be sharing logic.
-      
-      // Let's blindly load ALL favorites for now as a test, or try to respect the section logic if possible.
-      // `ProgramsProvider` doesn't seem to pass categoryId.
-      
-      // Pre-load:
-      final localFavs = favoritesProvider.favorites; // Or filter if we knew how
-      _allPrograms = List.from(localFavs); // Start with favorites
-      programs = List.from(_allPrograms);
+      // Reset displayed list immediately to show favorites
+      _applyFilter();
     }
-    notifyListeners(); // Immediate update with favorites
+    notifyListeners();
 
     final result = await getPrograms(GetProgramsParams(page: loadMore ? _currentPage + 1 : 0));
 
@@ -105,29 +83,16 @@ class ProgramsProvider extends ChangeNotifier {
       (r) {
         if (loadMore) {
            _currentPage++;
-           
-           // Filter out items already in _allPrograms (favorites or previous pages)
-           final existingIds = _allPrograms.map((p) => p.id).toSet();
-           final newItems = r.where((p) => !existingIds.contains(p.id)).toList();
-           
-           _allPrograms.addAll(newItems);
+           _mergeNewItems(r);
         } else {
            // Initial load complete.
-           // _allPrograms already has favorites.
-           // Append non-duplicate API results.
-           final favIds = _allPrograms.map((p) => p.id).toSet();
-           final newItems = r.where((p) => !favIds.contains(p.id)).toList();
-           
-           _allPrograms.addAll(newItems);
            _currentPage = 0;
+           _mergeNewItems(r);
         }
         
         if (r.isEmpty) {
           _hasMore = false;
         }
-        
-        // Re-apply filter if exists
-        _applyFilter();
         
         isLoading = false;
         notifyListeners();
@@ -139,13 +104,26 @@ class ProgramsProvider extends ChangeNotifier {
       },
     );
   }
+  
+  void _mergeNewItems(List<Program> newItems) {
+      // Logic:
+      // 1. We have _allPrograms which starts as [Fav1, Fav2...]
+      // 2. We receive new items from API.
+      // 3. We must append ONLY those that are NOT already in _allPrograms.
+      // 4. Since _allPrograms already contains Favorites, we just check against existing IDs.
+      
+      final existingIds = _allPrograms.map((p) => p.id).toSet();
+      final uniqueNewItems = newItems.where((p) => !existingIds.contains(p.id)).toList();
+      
+      _allPrograms.addAll(uniqueNewItems);
+      _applyFilter();
+  }
 
   Future<void> _fetchAllPagesInBackground() async {
     _isLoadingBackground = true;
     LoggerService().debug('Starting background fetch of programs...');
     
     while (_hasMore && _isLoadingBackground) {
-      // Dynamic throttle based on CPU power
       await Future.delayed(ConcurrencyHelper.getBackgroundFetchDelay());
       
       final result = await getPrograms(GetProgramsParams(page: _currentPage + 1));
@@ -161,12 +139,7 @@ class ProgramsProvider extends ChangeNotifier {
             _isLoadingBackground = false;
           } else {
             _currentPage++;
-            
-            final existingIds = _allPrograms.map((p) => p.id).toSet();
-            final newItems = r.where((p) => !existingIds.contains(p.id)).toList();
-            
-            _allPrograms.addAll(newItems);
-            _applyFilter();
+            _mergeNewItems(r);
             notifyListeners(); 
           }
         },
@@ -189,26 +162,44 @@ class ProgramsProvider extends ChangeNotifier {
   }
 
   void _applyFilter() {
-    // 1. Filter
     List<Program> filtered;
+    
     if (_currentQuery.isEmpty) {
-      filtered = List.from(_allPrograms);
+      // Default View: Favorites First (Implicitly handled by _allPrograms order)
+      // _allPrograms is constructed as [Favorites + API Results]
+      // We just need to make sure API results didn't duplicate favorites.
+      // AND we need to make sure if a Favorite was added/removed, logical order is kept?
+      // Actually, if a user ADDS a favorite, we want it to jump to top?
+      // Yes, _onFavoritesChanged triggers this.
+      
+      // Re-construct logic to ensure Favorites are ALWAYS at top if query is empty
+      final favs = favoritesProvider.favorites;
+      final favIds = favs.map((p) => p.id).toSet();
+      
+      // Non-favs from our accumulated list
+      final nonFavs = _allPrograms.where((p) => !favIds.contains(p.id)).toList();
+      
+      programs = [...favs, ...nonFavs];
+      
+      // Update _allPrograms to reflect this canonical order? 
+      // It's safer to keep _allPrograms as the source of truth for "Fetched Data", 
+      // but displayed 'programs' list is the projection.
     } else {
       final lowerQuery = _currentQuery.toLowerCase();
-      filtered = _allPrograms.where((p) => 
+      // Search: Filter matches, then sort favorites to top
+      final matches = _allPrograms.where((p) => 
         p.title.toLowerCase().contains(lowerQuery)
       ).toList();
+      
+      matches.sort((a, b) {
+        final favA = favoritesProvider.isFavorite(a.id);
+        final favB = favoritesProvider.isFavorite(b.id);
+        if (favA && !favB) return -1;
+        if (!favA && favB) return 1;
+        return 0;
+      });
+      
+      programs = matches;
     }
-
-    // 2. Sort by Favorites
-    filtered.sort((a, b) {
-      final favA = favoritesProvider.isFavorite(a.id);
-      final favB = favoritesProvider.isFavorite(b.id);
-      if (favA && !favB) return -1;
-      if (!favA && favB) return 1;
-      return 0;
-    });
-
-    programs = filtered;
   }
 }

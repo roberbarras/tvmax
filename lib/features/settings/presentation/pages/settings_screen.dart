@@ -12,6 +12,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _pathController = TextEditingController();
   final TextEditingController _cookieController = TextEditingController();
+  final FocusNode _pathFocusNode = FocusNode();
+  final FocusNode _cookieFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -29,6 +31,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _pathController.dispose();
     _cookieController.dispose();
+    _pathFocusNode.dispose();
+    _cookieFocusNode.dispose();
     super.dispose();
   }
 
@@ -48,6 +52,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
              _pathController.text = provider.downloadPath;
              _cookieController.text = provider.cookie;
              _isDataLoaded = true;
+             // Force focus on Path input initially for TV
+             WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (_pathFocusNode.canRequestFocus) {
+                  _pathFocusNode.requestFocus();
+                }
+             });
           }
 
           return Padding(
@@ -61,13 +71,93 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 8),
                 const Text('Escribe la ruta absoluta donde quieres guardar los vídeos:'),
                 const SizedBox(height: 8),
-                TextField(
-                  controller: _pathController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: '/home/user/Downloads',
-                    suffixIcon: Icon(Icons.folder),
+                // Read-Only Display of Path
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white24),
                   ),
+                  child: Row(
+                    children: [
+                       const Icon(Icons.folder, color: Colors.orange),
+                       const SizedBox(width: 12),
+                       Expanded(
+                         child: Text(
+                           _pathController.text, 
+                           style: const TextStyle(fontFamily: 'monospace'),
+                           overflow: TextOverflow.ellipsis,
+                         ),
+                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: () {
+                     showDialog(
+                       context: context, 
+                       builder: (context) {
+                          final tempController = TextEditingController(text: _pathController.text);
+                          return AlertDialog(
+                            backgroundColor: Colors.grey[900],
+                            title: const Text('Editar Ruta de Descarga', style: TextStyle(color: Colors.white)),
+                            content: TextField(
+                              controller: tempController,
+                              autofocus: true,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText: '/storage/...',
+                                hintStyle: TextStyle(color: Colors.white54),
+                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.orange)),
+                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.orange, width: 2)),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                                onPressed: () {
+                                   setState(() {
+                                      _pathController.text = tempController.text;
+                                   });
+                                   Navigator.pop(context);
+                                },
+                                child: const Text('Aceptar', style: TextStyle(color: Colors.black)),
+                              ),
+                            ],
+                          );
+                       }
+                     );
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('EDITAR RUTA MANUALMENTE'),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ActionChip(
+                      label: const Text('Por Defecto (Downloads)'),
+                      onPressed: () {
+                         setState(() {
+                            _pathController.text = '/storage/emulated/0/Download';
+                         });
+                      },
+                    ),
+                    ActionChip(
+                      label: const Text('Movies'),
+                      onPressed: () {
+                         setState(() {
+                            _pathController.text = '/storage/emulated/0/Movies';
+                         });
+                      },
+                    ),
+                  ],
                 ),
                 const Divider(height: 32),
                 const Text(
@@ -77,14 +167,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 8),
                 const Text('Pega aquí el valor de la header "Cookie" para acceder al contenido:'),
                 const SizedBox(height: 8),
-                TextField(
-                  controller: _cookieController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'AMCVS_...; ...',
-                    suffixIcon: Icon(Icons.security),
+                // Read-Only Display of Cookie
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white24),
                   ),
+                  child: Row(
+                    children: [
+                       const Icon(Icons.security, color: Colors.orange),
+                       const SizedBox(width: 12),
+                       Expanded(
+                         child: Text(
+                           _cookieController.text.isEmpty ? 'Sin cookies' : 'Cookies configuradas', 
+                           style: const TextStyle(fontFamily: 'monospace', color: Colors.white70),
+                           overflow: TextOverflow.ellipsis,
+                         ),
+                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: () {
+                     showDialog(
+                       context: context, 
+                       builder: (context) {
+                          final tempController = TextEditingController(text: _cookieController.text);
+                          return AlertDialog(
+                            backgroundColor: Colors.grey[900],
+                            title: const Text('Editar Cookie', style: TextStyle(color: Colors.white)),
+                            content: TextField(
+                              controller: tempController,
+                              autofocus: true,
+                              maxLines: 4,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText: 'Pega aquí el valor de la cookie...',
+                                hintStyle: TextStyle(color: Colors.white54),
+                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.orange)),
+                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.orange, width: 2)),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                                onPressed: () {
+                                   setState(() {
+                                      _cookieController.text = tempController.text;
+                                   });
+                                   Navigator.pop(context);
+                                },
+                                child: const Text('Aceptar', style: TextStyle(color: Colors.black)),
+                              ),
+                            ],
+                          );
+                       }
+                     );
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('EDITAR COOKIE'),
                 ),
                 const SizedBox(height: 16),
                 const Divider(height: 32),
@@ -168,6 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: const Text('Guardar'),
                   ),
                 ),
+                const SizedBox(height: 32), // Padding bottom for TV overscan
               ],
             ),
           );

@@ -26,9 +26,8 @@ subprojects {
 subprojects {
     project.pluginManager.withPlugin("java") {
         project.extensions.configure(JavaPluginExtension::class.java) {
-            toolchain {
-                languageVersion.set(JavaLanguageVersion.of(17))
-            }
+             // Toolchain removed to allow Gradle to use the daemon's JDK (Java 21)
+             // sourceCompatibility/targetCompatibility below handles Java 17 bytecode generation
         }
     }
 

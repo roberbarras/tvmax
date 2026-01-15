@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io'; // Required for Platform checks
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,6 +34,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   // State to track if we are using HW acceleration
   bool _useHardwareAcceleration = true;
   bool _hasFallenBack = false; // To prevent infinite loops
+  bool _autoQualitySet = false; // Tracks if we successfully auto-selected a quality
+  final FocusNode _videoFocusNode = FocusNode();
 
 // ... class definition ...
 
@@ -40,16 +43,28 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void initState() {
     super.initState();
     
-    // Default configuration with logging
     PlayerConfiguration config = const PlayerConfiguration(
       logLevel: MPVLogLevel.info,
     );
 
     player = Player(configuration: config);
     
+    // Attempt to limit Bitrate for HLS (Blind Quality Cap)
+    if (Platform.isAndroid) {
+       try {
+         // Limit to ~2.5 Mbps (good for 720p)
+         (player.platform as dynamic).setProperty('hls-bitrate', '2500000');
+         print('[VideoPlayer] 📉 Set HLS Bitrate limit to 2.5 Mbps');
+       } catch (e) {
+         print('[VideoPlayer] ⚠️ Could not set HLS bitrate: $e');
+       }
+    }
+    
     // Listen to logs for HW failures
     player.stream.log.listen((event) {
-      // print('[MPV] ${event.prefix}: ${event.text}'); // Keep verbose off unless debugging
+      if (event.level == MPVLogLevel.error || event.level == MPVLogLevel.warn) {
+         print('[MPV] ${event.prefix}: ${event.text}');
+      }
       if (_useHardwareAcceleration && !_hasFallenBack) {
          if (event.text.contains('hwaccel') && event.text.contains('error') || 
              event.text.contains('GLSL') && event.text.contains('not supported')) {
@@ -72,26 +87,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
        _applyDefaultSettings(tracks);
     });
 
-    // Initial Controller Setup
-    // Try HW acceleration first (unless on Linux where we might default to false if we wanted, 
-    // but user asked for DYNAMIC check, so let's try true first and fallback).
-    // NOTE: On the user's specific Linux setup, we previously hardcoded false. 
-    // Now we will try true, but fallback if it crashes.
-    _useHardwareAcceleration = !Platform.isLinux; // Still default to false on Linux for safety? 
-    // User requested "Apply pattern... if available". 
-    // Let's try to Enable it by default even on Linux, but trust the fallback.
-    // However, since we *know* it fails on their machine, defaulting to false is safer, 
-    // but the fallback logic allows us to set it to true pending a working verify.
-    // Let's stick to the Platform check for the *default*, but allow the USER to toggle it or logic to handle it.
-    // Actually, to truly answer "Dynamic Decision", we should start TRUE and let the error catcher switch it.
-    // BUT the "Blue Screen" might not emit a text log error caught easily before the User notices.
-    // For now, let's keep the Linux default safe (false) or try (true) with fallback.
-    // Given the previous failure was critical (blue screen), let's implement the fallback mechanism
-    // but keep the default strict for now, OR implement a manual toggle.
-    // 
-    // Let's try: Default to !Platform.isLinux (Safe). 
-    // BUT, implement the fallback mechanism anyway in case they get standard failures on other platforms.
-    
     _initializeController();
     
     // Get headers with cookie
@@ -103,15 +98,67 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     print('[VideoPlayer] Opening media with headers: $headers');
     player.open(Media(widget.url, httpHeaders: headers));
     
+    // Ensure Focus is captured so remote keys work
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _videoFocusNode.requestFocus();
+    });
+
     _checkSavedProgress();
     _startProgressSaver();
+    _checkDeviceCapabilities();
+  }
+
+   // Detect Low-End Devices (e.g. Android TV Sticks with < 2GB RAM)
+  bool _isLowEndDevice = false;
+  Future<void> _checkDeviceCapabilities() async {
+     try {
+       if (Platform.isAndroid || Platform.isLinux) { // Works on Linux too usually
+          // Manual RAM Check via /proc/meminfo
+          // This avoids the confusing device_info_plus API changes
+          final totalRam = await _getTotalRam();
+          
+          if (totalRam != null) {
+              const lowRamThreshold = 2500 * 1024 * 1024; // 2.5 GB
+              if (totalRam < lowRamThreshold) {
+                  print('[VideoPlayer] ⚠️ Low-End Device Detected (RAM: ${(totalRam / (1024*1024)).round()} MB).');
+                  _isLowEndDevice = true;
+              }
+          }
+       }
+     } catch (e) {
+       print('[VideoPlayer] Error checking device capabilities: $e');
+     }
+  }
+
+  Future<int?> _getTotalRam() async {
+    try {
+      final file = File('/proc/meminfo');
+      if (await file.exists()) {
+        final lines = await file.readAsLines();
+        for (final line in lines) {
+          if (line.startsWith('MemTotal:')) {
+            // Format: MemTotal:        16303252 kB
+            final parts = line.split(RegExp(r'\s+'));
+            if (parts.length >= 2) {
+              final kb = int.tryParse(parts[1]);
+              if (kb != null) {
+                return kb * 1024; // Convert to Bytes
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    return null;
   }
 
   void _initializeController() {
      controller = VideoController(
       player,
       configuration: VideoControllerConfiguration(
-        enableHardwareAcceleration: _useHardwareAcceleration, 
+        enableHardwareAcceleration: !Platform.isLinux, // Fix Blue Screen on Linux (Force Software)
       ),
     );
   }
@@ -142,6 +189,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     
     // Only apply if we actually have tracks
     if (tracks.video.isEmpty && tracks.subtitle.isEmpty) return;
+    
+    // LOG ALL TRACKS FOR DEBUGGING
+    print('[VideoPlayer] 📋 Available Video Tracks:');
+    for (var t in tracks.video) {
+       print('  - ID: ${t.id}, Res: ${t.w}x${t.h}, Bitrate: ${t.bitrate}, Codec: ${t.codec}');
+    }
 
     final settings = context.read<SettingsProvider>();
     final defSub = settings.defaultSubtitleLanguage; // 'off', 'es', 'en'
@@ -150,26 +203,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     print('[VideoPlayer] Applying Defaults -> Subtitle: $defSub, Quality: $defQual');
 
     // 1. Apply Subtitle Default
-    if (defSub == 'off') {
-       player.setSubtitleTrack(SubtitleTrack.no());
-    } else {
-       // Find best match
+    player.setSubtitleTrack(SubtitleTrack.no());
+    
+    if (defSub != 'off' && defSub != 'auto') {
        try {
          final match = tracks.subtitle.firstWhere(
            (t) {
              final lang = (t.language ?? t.title ?? '').toLowerCase();
              return lang.contains(defSub.toLowerCase());
            },
-           orElse: () => SubtitleTrack.no(), // Fallback if preferred lang not found? Or keep default?
-           // If user wants 'es' but only 'en' exists, maybe keep default (usually the first one or none)?
-           // Let's fallback to "no" if explicit preference not found to avoid annoyance.
+           orElse: () => SubtitleTrack.no(), 
          );
          if (match != SubtitleTrack.no()) {
              player.setSubtitleTrack(match);
-         } else if (defSub != 'auto') {
-             // If user explicitly wanted a language and we didn't find it, 
-             // we might want to disable subs instead of random one.
-             player.setSubtitleTrack(SubtitleTrack.no());
          }
        } catch (e) {
          print('[VideoPlayer] Error matching subtitle: $e');
@@ -177,13 +223,29 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     // 2. Apply Quality Default
-    if (defQual != 'auto') {
+    if (_isLowEndDevice && defQual == 'auto') {
+         // Check if we have tracks. If not, wait for them.
+        if (player.state.tracks.video.isEmpty) {
+           print('[VideoPlayer] ⏳ No tracks yet. Waiting for track list to populate...');
+           StreamSubscription? sub;
+           sub = player.stream.tracks.listen((tracks) {
+              if (tracks.video.isNotEmpty) {
+                 print('[VideoPlayer] 📦 Tracks received: ${tracks.video.length}');
+                 _applySmartQuality(tracks.video);
+                 sub?.cancel();
+              }
+           });
+        } else {
+           _applySmartQuality(player.state.tracks.video);
+        }
+    } 
+
+    if (!_autoQualitySet && defQual != 'auto') {
       try {
          // Parse target height
          final targetH = int.tryParse(defQual) ?? 1080;
          
          // Find closest match
-         // Sort by difference to target
          final sorted = List.of(tracks.video);
          sorted.sort((a, b) {
             final hA = a.h ?? 0;
@@ -332,103 +394,90 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
   
   void _showQualitySelection() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.grey[900],
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-               const Text('Calidad', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-               const Divider(color: Colors.grey),
-               Expanded(
-                 child: ListView.builder(
-                   itemCount: player.state.tracks.video.length,
-                   itemBuilder: (context, index) {
-                      final track = player.state.tracks.video[index];
-                      final isSelected = player.state.track.video == track;
-                      
-                      // Format label: e.g. "1920x1080 (3000 kbps)" or "Auto"
-                      String label = 'Auto';
-                      if (track.w != null && track.w! > 0) {
-                         label = '${track.w}x${track.h}';
-                         if (track.bitrate != null) {
-                           label += ' (${(track.bitrate! / 1000).round()} kbps)';
-                         }
-                      }
-                      
-                      return ListTile(
-                        leading: isSelected ? const Icon(Icons.check, color: Colors.orange) : const SizedBox(width: 24),
-                        title: Text(
-                          label, 
-                          style: TextStyle(color: isSelected ? Colors.orange : Colors.white),
-                        ),
-                        onTap: () {
-                           player.setVideoTrack(track);
-                           Navigator.pop(context);
-                        },
-                      );
-                   },
+        return SimpleDialog(
+          title: const Text('Calidad', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.grey[900],
+          children: player.state.tracks.video.map((track) {
+             final isSelected = player.state.track.video == track;
+             
+             String label = 'Auto';
+             if (track.w != null && track.w! > 0) {
+                label = '${track.w}x${track.h}';
+                if (track.bitrate != null) {
+                  label += ' (${(track.bitrate! / 1000).round()} kbps)';
+                }
+             }
+
+             return SimpleDialogOption(
+               onPressed: () {
+                  player.setVideoTrack(track);
+                  Navigator.pop(context);
+               },
+               child: Container(
+                 padding: const EdgeInsets.symmetric(vertical: 8),
+                 decoration: isSelected 
+                   ? BoxDecoration(border: Border.all(color: Colors.orange), borderRadius: BorderRadius.circular(4)) 
+                   : null,
+                 child: Row(
+                   children: [
+                     if (isSelected) const Icon(Icons.check, color: Colors.orange, size: 16),
+                     if (isSelected) const SizedBox(width: 8),
+                     Text(label, style: TextStyle(color: isSelected ? Colors.orange : Colors.white)),
+                   ],
                  ),
                ),
-            ],
-          ),
+             );
+          }).toList(),
         );
       },
     );
   }
 
   void _showSubtitleSelection() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.grey[900],
       builder: (context) {
-         // Add "Off" option manually
          final subtitles = [SubtitleTrack.no(), ...player.state.tracks.subtitle];
          
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-               const Text('Subtítulos', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-               const Divider(color: Colors.grey),
-               Expanded(
-                 child: ListView.builder(
-                   itemCount: subtitles.length,
-                   itemBuilder: (context, index) {
-                      final track = subtitles[index];
-                      final isSelected = player.state.track.subtitle == track;
-                      
-                      String label;
-                      if (track == SubtitleTrack.no()) {
-                        label = 'Desactivar';
-                      } else {
-                        // Intelligent formatting for languages
-                        final lang = track.language?.toLowerCase();
-                        if (lang == 'es' || lang == 'spa') label = 'Español';
-                        else if (lang == 'en' || lang == 'eng') label = 'Inglés';
-                        else label = track.title ?? track.language ?? 'Pista $index';
-                      }
-                      
-                      return ListTile(
-                        leading: isSelected ? const Icon(Icons.check, color: Colors.orange) : const SizedBox(width: 24),
-                        title: Text(
-                          label, 
-                          style: TextStyle(color: isSelected ? Colors.orange : Colors.white),
-                        ),
-                        onTap: () {
-                           player.setSubtitleTrack(track);
-                           Navigator.pop(context);
-                        },
-                      );
-                   },
+         return SimpleDialog(
+          title: const Text('Subtítulos', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.grey[900],
+          children: subtitles.map((track) {
+             final isSelected = player.state.track.subtitle == track;
+             
+              String label;
+              if (track == SubtitleTrack.no()) {
+                label = 'Desactivar';
+              } else {
+                final lang = track.language?.toLowerCase();
+                if (lang == 'es' || lang == 'spa') label = 'Español';
+                else if (lang == 'en' || lang == 'eng') label = 'Inglés';
+                else label = track.title ?? track.language ?? 'Pista ${subtitles.indexOf(track)}';
+              }
+
+             return SimpleDialogOption(
+               onPressed: () {
+                  player.setSubtitleTrack(track);
+                  Navigator.pop(context);
+               },
+               child: Container(
+                 padding: const EdgeInsets.symmetric(vertical: 8),
+                 decoration: isSelected 
+                   ? BoxDecoration(border: Border.all(color: Colors.orange), borderRadius: BorderRadius.circular(4)) 
+                   : null,
+                 child: Row(
+                   children: [
+                     if (isSelected) const Icon(Icons.check, color: Colors.orange, size: 16),
+                     if (isSelected) const SizedBox(width: 8),
+                     Text(label, style: TextStyle(color: isSelected ? Colors.orange : Colors.white)),
+                   ],
                  ),
                ),
-            ],
-          ),
+             );
+          }).toList(),
         );
       },
     );
@@ -441,12 +490,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-      ),
+      appBar: null, // Removed AppBar to allow Auto-Hide via Controls
       extendBodyBehindAppBar: true, 
       body: Center(
         child: isMobile 
@@ -468,10 +512,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                  ),
                  const MaterialFullscreenButton(),
               ],
+              topButtonBar: [
+                 const BackButton(color: Colors.white),
+                 Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ],
             ),
             fullscreen: MaterialVideoControlsThemeData(
               seekBarPositionColor: Colors.orange,
               seekBarThumbColor: Colors.orange,
+              topButtonBar: [
+                 const BackButton(color: Colors.white),
+                 Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ],
               bottomButtonBar: [
                  const MaterialPlayOrPauseButton(),
                  const MaterialPositionIndicator(),
@@ -493,6 +545,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           normal: MaterialDesktopVideoControlsThemeData(
              seekBarPositionColor: Colors.orange,
              seekBarThumbColor: Colors.orange,
+             topButtonBar: [
+                const BackButton(color: Colors.white),
+                const SizedBox(width: 8),
+                Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+             ],
              bottomButtonBar: [
                 const MaterialDesktopSkipPreviousButton(),
                 const MaterialDesktopPlayOrPauseButton(),
@@ -515,6 +572,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           fullscreen: MaterialDesktopVideoControlsThemeData(
              seekBarPositionColor: Colors.orange,
              seekBarThumbColor: Colors.orange,
+             topButtonBar: [
+                const BackButton(color: Colors.white),
+                const SizedBox(width: 8),
+                Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+             ],
              bottomButtonBar: [
                 const MaterialDesktopSkipPreviousButton(),
                 const MaterialDesktopPlayOrPauseButton(),
@@ -541,5 +603,35 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         ),
       ),
     );
+  }
+  void _applySmartQuality(List<VideoTrack> videoTracks) {
+    if (_autoQualitySet) return;
+    
+    // Sort logic
+    final sorted = List<VideoTrack>.from(videoTracks);
+    sorted.sort((a, b) => (a.h ?? 0).compareTo(b.h ?? 0));
+
+    print('[VideoPlayer] ⚠ Low-End Device: Forcing 720p or lower.');
+    
+    final candidates = sorted.where((t) {
+        final h = t.h ?? 0;
+        return h > 0 && h <= 720;
+    }).toList();
+
+    if (candidates.isNotEmpty) {
+        final best = candidates.last;
+        print('[VideoPlayer] Smart Quality: Selected ${best.w}x${best.h}');
+        player.setVideoTrack(best);
+        _autoQualitySet = true;
+    } else if (sorted.isNotEmpty) {
+        // Fallback to smallest valid
+        final validSorted = sorted.where((t) => (t.h ?? 0) > 0).toList();
+        if (validSorted.isNotEmpty) {
+             final best = validSorted.first;
+             print('[VideoPlayer] Smart Quality: Fallback to smallest ${best.w}x${best.h}');
+             player.setVideoTrack(best);
+             _autoQualitySet = true;
+        }
+    }
   }
 }

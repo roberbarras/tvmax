@@ -45,15 +45,33 @@ class _MainScreenState extends State<MainScreen> {
       
       // Apply default section
       final settingsProvider = context.read<SettingsProvider>();
-      // Use a post frame callback or ensure logic runs once settings are ready. 
-      // Settings are loaded in main() via "..loadSettings()".
-      // So they might be ready or loading.
-      // But typically we can just set it here.
       if (settingsProvider.defaultSectionIndex != 0) {
          context.read<NavigationProvider>().setIndex(settingsProvider.defaultSectionIndex);
       }
+      
+      // Request initial focus on Bottom Bar
+      // We perform a delayed request to ensure the widget tree is ready and nodes are attached.
+      Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+              final nav = context.read<NavigationProvider>();
+              if (nav.bottomBarFocusNode.canRequestFocus) {
+                 nav.bottomBarFocusNode.requestFocus();
+              }
+          }
+      });
     });
   }
+
+  // ... (error notification method omitted but preserved if not overlapped, wait, I need to match StartLine carefully)
+  // Actually I cannot skip lines inside snippet if I don't provide them.
+  // I will just use StartLine/EndLine for the specific blocks.
+  
+  // I will do two edits. One for initState, one for build.
+  // Wait, I can do one `replace_file_content` if I include the whole file or large chunk, but that's wasteful.
+  // I'll do two chunks since the tool allows replacement chunks.
+  
+  // Actually, I'll just replace initState first.
+
 
   void _showErrorNotification(BuildContext context, String message) {
     OverlayEntry? overlayEntry;
@@ -113,56 +131,100 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Consumer<NavigationProvider>(
       builder: (context, navProvider, _) {
-        return Scaffold(
-          body: IndexedStack(
-            index: navProvider.currentIndex,
-            children: _screens,
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (didPop) async {
+            if (didPop) return;
+            
+            if (navProvider.bottomBarFocusNode.hasFocus) {
+               // Focus is on bottom bar, allow exit
+               final shouldPop = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                     title: const Text('¿Salir de TVMax?'),
+                     actions: [
+                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+                        TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Salir')),
+                     ],
+                  ),
+               );
+               if (shouldPop ?? false) {
+                   if (context.mounted) Navigator.of(context).pop();
+               }
+            } else {
+               // Focus is in content -> Returning to bottom bar
+               navProvider.bottomBarFocusNode.requestFocus();
+            }
+          },
+          child: Scaffold(
+            body: IndexedStack(
+              index: navProvider.currentIndex,
+              children: _screens,
+            ),
+            bottomNavigationBar: FocusScope(
+            node: navProvider.bottomBarFocusNode,
+            child: NavigationBar(
+              selectedIndex: navProvider.currentIndex,
+              onDestinationSelected: (index) {
+                // Determine if we need to switch tab or just focus content
+                bool shouldFocusContent = true;
+                
+                if (navProvider.currentIndex != index) {
+                   navProvider.setIndex(index);
+                }
+                
+                // Move focus to content (Up direction)
+                if (shouldFocusContent) {
+                   // Small delay to allow UI rebuild if switching tabs
+                   Future.microtask(() {
+                      if (context.mounted) {
+                          FocusScope.of(context).focusInDirection(TraversalDirection.up);
+                      }
+                   });
+                }
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home),
+                  label: 'Programas',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.newspaper_outlined),
+                  selectedIcon: Icon(Icons.newspaper),
+                  label: 'Noticias',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.movie_creation_outlined),
+                  selectedIcon: Icon(Icons.movie_creation),
+                  label: 'Series',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.videocam_outlined),
+                  selectedIcon: Icon(Icons.videocam),
+                  label: 'Documentales',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.favorite_outline),
+                  selectedIcon: Icon(Icons.favorite),
+                  label: 'Favoritos',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.download_outlined),
+                  selectedIcon: Icon(Icons.download),
+                  label: 'Descargas',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.settings_outlined),
+                  selectedIcon: Icon(Icons.settings),
+                  label: 'Ajustes',
+                ),
+              ],
+            ),
           ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: navProvider.currentIndex,
-            onDestinationSelected: (index) {
-              navProvider.setIndex(index);
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Programas',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.newspaper_outlined),
-                selectedIcon: Icon(Icons.newspaper),
-                label: 'Noticias',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.movie_creation_outlined),
-                selectedIcon: Icon(Icons.movie_creation),
-                label: 'Series',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.videocam_outlined),
-                selectedIcon: Icon(Icons.videocam),
-                label: 'Documentales',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.favorite_outline),
-                selectedIcon: Icon(Icons.favorite),
-                label: 'Favoritos',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.download_outlined),
-                selectedIcon: Icon(Icons.download),
-                label: 'Descargas',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: 'Ajustes',
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 }
