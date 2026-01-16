@@ -35,6 +35,16 @@ else
      echo -e "${GREEN}✅ ANDROID_HOME is set to: $ANDROID_HOME ${NC}"
 fi
 
+# 0.5. Java Setup (Fix for Local vs CI)
+# If we find the specific Java 17 version locally, use it to avoid usage of Java 21 which allows the build to fail
+LOCAL_JAVA17="/home/user/.sdkman/candidates/java/17.0.17-tem"
+if [ -d "$LOCAL_JAVA17" ]; then
+    echo -e "${GREEN}✅ Detected local Java 17. Setting JAVA_HOME to: $LOCAL_JAVA17 ${NC}"
+    export JAVA_HOME="$LOCAL_JAVA17"
+else
+    echo -e "${BLUE}ℹ️ No local Java 17 override found. Using system default.${NC}"
+fi
+
 # 0.5. Pre-flight Check (Ensure Packaging Tools Exist)
 echo -e "${BLUE}🔍 Checking packaging tools...${NC}"
 APPIMAGE_TOOL="packaging/appimagetool-x86_64.AppImage"
