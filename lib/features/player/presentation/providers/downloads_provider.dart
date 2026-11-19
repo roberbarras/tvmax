@@ -32,7 +32,7 @@ class DownloadsProvider extends ChangeNotifier {
   Future<void> _initNotifications() async {
     try {
       // Android
-      const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
+      const androidSettings = AndroidInitializationSettings('@drawable/ic_stat_tvmax');
       
       // Linux
       final linuxSettings = LinuxInitializationSettings(

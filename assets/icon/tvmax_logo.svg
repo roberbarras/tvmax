@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="TVMax">
+  <title>TVMax</title>
+  <defs>
+    <!-- Brand gradient: amber → orange → magenta -->
+    <linearGradient id="brand" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#FFC247"/>
+      <stop offset="0.5" stop-color="#FF6B1A"/>
+      <stop offset="1" stop-color="#E5186E"/>
+    </linearGradient>
+    <!-- Night background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#1D1536"/>
+      <stop offset="0.55" stop-color="#110D22"/>
+      <stop offset="1" stop-color="#08070F"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.52" r="0.5">
+      <stop offset="0" stop-color="#FF6B1A" stop-opacity="0.38"/>
+      <stop offset="0.55" stop-color="#E5186E" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#E5186E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur" filterUnits="userSpaceOnUse" x="212" y="212" width="600" height="600">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+    <clipPath id="tile"><rect width="1024" height="1024" rx="232"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#tile)">
+    <rect width="1024" height="1024" fill="url(#bg)"/>
+    <circle cx="512" cy="540" r="470" fill="url(#glow)"/>
+    <rect width="1024" height="560" fill="url(#gloss)"/>
+  </g>
+
+  <!-- Antenna: a V ending in a live dot -->
+  <g fill="none" stroke="url(#brand)" stroke-width="30" stroke-linecap="round">
+    <path d="M512 292 L398 190"/>
+    <path d="M512 292 L626 190"/>
+  </g>
+  <circle cx="626" cy="190" r="30" fill="#FF3B6B"/>
+  <circle cx="626" cy="190" r="52" fill="none" stroke="#FF3B6B" stroke-opacity="0.35" stroke-width="10"/>
+
+  <!-- Screen -->
+  <rect x="200" y="292" width="624" height="440" rx="124" fill="#FFFFFF" fill-opacity="0.05"
+        stroke="url(#brand)" stroke-width="38"/>
+
+  <!-- Play: glow + rounded triangle -->
+  <g filter="url(#blur)" opacity="0.75">
+    <path d="M452 436 V588 L598 512Z" fill="url(#brand)" stroke="url(#brand)" stroke-width="44" stroke-linejoin="round"/>
+  </g>
+  <path d="M452 436 V588 L598 512Z" fill="url(#brand)" stroke="url(#brand)" stroke-width="44" stroke-linejoin="round"/>
+
+  <!-- Stand -->
+  <rect x="372" y="796" width="280" height="30" rx="15" fill="url(#brand)" opacity="0.85"/>
+
+  <!-- Inner rim light -->
+  <rect x="6" y="6" width="1012" height="1012" rx="226" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="4"/>
+</svg>
