@@ -25,6 +25,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          # Pinned: latest stable requires Gradle >= 9.3.1, this project uses 8.14 / AGP 8.7
+          flutter-version: '3.35.x'
 
       - name: Configure Platform
         run: dart scripts/set_platform.dart mobile
@@ -71,6 +73,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          # Pinned: latest stable requires Gradle >= 9.3.1, this project uses 8.14 / AGP 8.7
+          flutter-version: '3.35.x'
 
       - name: Enable Desktop
         run: flutter config --enable-linux-desktop
@@ -132,6 +136,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          # Pinned: latest stable requires Gradle >= 9.3.1, this project uses 8.14 / AGP 8.7
+          flutter-version: '3.35.x'
 
       - name: Enable Desktop
         run: flutter config --enable-windows-desktop
@@ -184,6 +190,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          # Pinned: latest stable requires Gradle >= 9.3.1, this project uses 8.14 / AGP 8.7
+          flutter-version: '3.35.x'
 
       - name: Configure Platform
         run: dart scripts/set_platform.dart mobile
@@ -222,6 +230,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          # Pinned: latest stable requires Gradle >= 9.3.1, this project uses 8.14 / AGP 8.7
+          flutter-version: '3.35.x'
 
       - name: Configure Platform
         run: dart scripts/set_platform.dart mobile
