@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io'; // Required for Platform checks
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import '../../../../core/utils/device_utils.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -159,15 +159,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   // Android TV exposes the leanback feature. There we replace the touch
   // controls with D-pad ones (OK = play/pause, left/right = seek).
   Future<void> _detectTv() async {
-    var tv = false;
-    if (Platform.isAndroid) {
-      try {
-        final info = await DeviceInfoPlugin().androidInfo;
-        tv = info.systemFeatures.contains('android.software.leanback');
-      } catch (e) {
-        print('[VideoPlayer] Error detecting TV: $e');
-      }
-    }
+    final tv = await DeviceUtils.isAndroidTv();
     if (!mounted) return;
     setState(() => _isTv = tv);
     if (tv) _showOverlay();

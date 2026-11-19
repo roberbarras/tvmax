@@ -124,7 +124,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => LiveService(client: sl()));
 
   // Navigation Provider
-  sl.registerLazySingleton(() => NavigationProvider());
+  sl.registerLazySingleton(() => NavigationProvider(sharedPreferences: sl()));
 
   //! Core
   sl.registerLazySingleton(() => DatabaseHelper.instance);

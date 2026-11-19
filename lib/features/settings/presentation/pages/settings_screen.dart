@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 
@@ -242,19 +243,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 Consumer<SettingsProvider>(
                   builder: (context, provider, _) {
-                    return DropdownButton<int>(
-                      value: provider.defaultSectionIndex,
+                    return DropdownButton<AppTab>(
+                      value: provider.defaultSection,
                       isExpanded: true,
                       dropdownColor: Colors.grey[900],
                       items: const [
-                        DropdownMenuItem(value: 0, child: Text('Directo')),
-                        DropdownMenuItem(value: 1, child: Text('Programas')),
-                        DropdownMenuItem(value: 2, child: Text('Noticias')),
-                        DropdownMenuItem(value: 3, child: Text('Series')),
-                        DropdownMenuItem(value: 4, child: Text('Documentales')),
-                      ],
+                        AppTab.programs,
+                        AppTab.live,
+                        AppTab.news,
+                        AppTab.series,
+                        AppTab.documentaries,
+                      ].map((tab) => DropdownMenuItem(value: tab, child: Text(tab.label))).toList(),
                       onChanged: (value) {
-                        if (value != null) provider.setDefaultSectionIndex(value);
+                        if (value != null) provider.setDefaultSection(value);
                       },
                     );
                   }

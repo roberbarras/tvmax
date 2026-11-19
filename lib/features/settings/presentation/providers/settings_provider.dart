@@ -12,10 +12,10 @@ class SettingsProvider extends ChangeNotifier {
 
   static const String _keyDownloadPath = 'download_path';
   static const String _keyCookie = 'auth_cookie';
-  // 'default_section_index' used the old tab order (Programas first). The Directo tab
-  // moved to position 0, so positions are stored under a new key.
-  static const String _keyLegacyDefaultSectionIndex = 'default_section_index';
-  static const String _keyDefaultSectionIndex = 'default_section_tab';
+  // Legacy int keys stored a tab *position* in older tab orders; now the tab name is stored.
+  static const String _keyLegacyDefaultSectionIndex = 'default_section_index'; // 0 Programas, 1 Noticias, 2 Series, 3 Documentales, 7 Directo
+  static const String _keyLegacyDefaultSectionTab = 'default_section_tab'; // 0 Directo, 1 Programas, 2 Noticias, 3 Series, 4 Documentales
+  static const String _keyDefaultSection = 'default_section_name';
   static const String _keyDefaultSubtitleLanguage = 'default_subtitle_language';
   static const String _keyDefaultQuality = 'default_quality';
 
@@ -25,8 +25,8 @@ class SettingsProvider extends ChangeNotifier {
   String _cookie = '';
   String get cookie => _cookie;
 
-  int _defaultSectionIndex = NavTab.programs;
-  int get defaultSectionIndex => _defaultSectionIndex;
+  AppTab _defaultSection = AppTab.programs;
+  AppTab get defaultSection => _defaultSection;
 
   String _defaultSubtitleLanguage = 'off'; // 'off', 'es', 'en'
   String get defaultSubtitleLanguage => _defaultSubtitleLanguage;
@@ -37,24 +37,34 @@ class SettingsProvider extends ChangeNotifier {
   bool _isLoading = true;
   bool get isLoading => _isLoading;
 
-  int _loadDefaultSection() {
-    final current = sharedPreferences.getInt(_keyDefaultSectionIndex);
-    if (current != null) return current;
+  AppTab _loadDefaultSection() {
+    final name = sharedPreferences.getString(_keyDefaultSection);
+    for (final tab in AppTab.values) {
+      if (tab.name == name) return tab;
+    }
+    final byTab = sharedPreferences.getInt(_keyLegacyDefaultSectionTab);
+    if (byTab != null) {
+      const order = [AppTab.live, AppTab.programs, AppTab.news, AppTab.series, AppTab.documentaries];
+      if (byTab >= 0 && byTab < order.length) return order[byTab];
+    }
     final legacy = sharedPreferences.getInt(_keyLegacyDefaultSectionIndex);
-    if (legacy == null) return NavTab.programs;
-    // Old order: 0 Programas, 1 Noticias, 2 Series, 3 Documentales, 7 Directo
-    return legacy == 7 ? NavTab.live : legacy + 1;
+    if (legacy != null) {
+      const order = [AppTab.programs, AppTab.news, AppTab.series, AppTab.documentaries];
+      if (legacy == 7) return AppTab.live;
+      if (legacy >= 0 && legacy < order.length) return order[legacy];
+    }
+    return AppTab.programs;
   }
 
   Future<void> loadSettings() async {
     _downloadPath = sharedPreferences.getString(_keyDownloadPath) ?? '';
     _cookie = sharedPreferences.getString(_keyCookie) ?? '';
-    _defaultSectionIndex = _loadDefaultSection();
+    _defaultSection = _loadDefaultSection();
     _defaultSubtitleLanguage = sharedPreferences.getString(_keyDefaultSubtitleLanguage) ?? _defaultSubtitleLanguage;
     _defaultQuality = sharedPreferences.getString(_keyDefaultQuality) ?? _defaultQuality;
 
     LoggerService().debug('[Settings] Loaded cookie: ${_cookie.isNotEmpty ? "YES (len=${_cookie.length})" : "NO"}');
-    LoggerService().debug('[Settings] Default Section: $_defaultSectionIndex');
+    LoggerService().debug('[Settings] Default Section: ${_defaultSection.name}');
     LoggerService().debug('[Settings] Default Subtitle: $_defaultSubtitleLanguage');
     LoggerService().debug('[Settings] Default Quality: $_defaultQuality');
     
@@ -91,9 +101,9 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setDefaultSectionIndex(int index) async {
-    _defaultSectionIndex = index;
-    await sharedPreferences.setInt(_keyDefaultSectionIndex, index);
+  Future<void> setDefaultSection(AppTab tab) async {
+    _defaultSection = tab;
+    await sharedPreferences.setString(_keyDefaultSection, tab.name);
     notifyListeners();
   }
 

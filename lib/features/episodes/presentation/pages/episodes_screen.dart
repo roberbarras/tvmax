@@ -209,7 +209,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
           TextButton(
              onPressed: () {
                Navigator.pop(context);
-               context.read<NavigationProvider>().setIndex(NavTab.settings);
+               context.read<NavigationProvider>().setTab(AppTab.settings);
                Navigator.popUntil(context, (route) => route.isFirst);
              },
              child: const Text('Ir a Ajustes'),
@@ -345,7 +345,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
                     onPressed: () {
                       overlayEntry?.remove();
                       // Navigate to Downloads tab
-                      context.read<NavigationProvider>().setIndex(NavTab.downloads);
+                      context.read<NavigationProvider>().setTab(AppTab.downloads);
                       Navigator.popUntil(context, (route) => route.isFirst);
                     },
                     child: const Text('VER DESCARGAS'),
