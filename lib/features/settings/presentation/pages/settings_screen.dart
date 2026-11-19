@@ -251,6 +251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         DropdownMenuItem(value: 1, child: Text('Noticias')),
                         DropdownMenuItem(value: 2, child: Text('Series')),
                         DropdownMenuItem(value: 3, child: Text('Documentales')),
+                        DropdownMenuItem(value: 7, child: Text('Directo')),
                       ],
                       onChanged: (value) {
                         if (value != null) provider.setDefaultSectionIndex(value);

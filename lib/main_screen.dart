@@ -6,6 +6,7 @@ import '../../features/programs/presentation/pages/documentaries_screen.dart';
 import '../../features/favorites/presentation/pages/favorites_screen.dart';
 import '../../features/player/presentation/pages/downloads_screen.dart';
 import '../../features/settings/presentation/pages/settings_screen.dart';
+import 'features/live/presentation/pages/live_screen.dart';
 
 import 'package:provider/provider.dart';
 import '../../core/providers/navigation_provider.dart';
@@ -30,6 +31,7 @@ class _MainScreenState extends State<MainScreen> {
     FavoritesScreen(),
     DownloadsScreen(),
     SettingsScreen(),
+    LiveScreen(),
   ];
   
   @override
@@ -226,6 +228,11 @@ class _MainScreenState extends State<MainScreen> {
                   icon: Icon(Icons.settings_outlined),
                   selectedIcon: Icon(Icons.settings),
                   label: 'Ajustes',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.live_tv_outlined),
+                  selectedIcon: Icon(Icons.live_tv),
+                  label: 'Directo',
                 ),
               ],
             ),

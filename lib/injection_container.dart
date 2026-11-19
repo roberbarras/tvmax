@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'features/live/data/live_service.dart';
 
 import 'core/database/database_helper.dart';
 import 'features/episodes/data/datasources/episodes_local_data_source.dart';
@@ -118,6 +119,9 @@ Future<void> init() async {
 
   // Favorites Provider
   sl.registerLazySingleton(() => FavoritesProvider(dbHelper: sl()));
+
+  //! Features - Live
+  sl.registerLazySingleton(() => LiveService(client: sl()));
 
   // Navigation Provider
   sl.registerLazySingleton(() => NavigationProvider());

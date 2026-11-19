@@ -15,12 +15,15 @@ class VideoPlayerScreen extends StatefulWidget {
   final String url;
   final String title;
   final String episodeId;
+  // Live channel: no resume dialog, no progress saving, no seeking.
+  final bool isLive;
 
   const VideoPlayerScreen({
     super.key, 
     required this.url, 
     required this.title,
     required this.episodeId,
+    this.isLive = false,
   });
 
   @override
@@ -108,19 +111,24 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     _initializeController();
     
-    // Get headers with cookie
-    final settings = context.read<SettingsProvider>();
-    print('[VideoPlayer] Loading with cookie: ${settings.cookie.isNotEmpty ? "YES" : "NO"}');
-    final headers = AppConstants.getHeaders(settings.cookie);
+    final headers = _mediaHeaders();
     
     // Pass headers to Media
     print('[VideoPlayer] Opening media (${headers.length} headers)');
     player.open(Media(widget.url, httpHeaders: headers));
     
     _detectTv();
-    _checkSavedProgress();
-    _startProgressSaver();
+    if (!widget.isLive) {
+      _checkSavedProgress();
+      _startProgressSaver();
+    }
     _checkDeviceCapabilities();
+  }
+
+  // Live streams are public, so the session cookie is only sent for on-demand content.
+  Map<String, String> _mediaHeaders() {
+    if (widget.isLive) return AppConstants.liveHeaders;
+    return AppConstants.getHeaders(context.read<SettingsProvider>().cookie);
   }
 
   // Android TV exposes the leanback feature. There we replace the touch
@@ -209,7 +217,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
      
      // Useful: restart playback to clear bad state
      final pos = player.state.position;
-     player.open(Media(widget.url, httpHeaders: AppConstants.getHeaders(context.read<SettingsProvider>().cookie)));
+     player.open(Media(widget.url, httpHeaders: _mediaHeaders()));
      player.seek(pos);
      player.seek(pos);
   }
@@ -332,6 +340,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Future<void> _saveCurrentProgress() async {
+    if (widget.isLive) return;
     final pos = player.state.position.inMilliseconds;
     final duration = player.state.duration.inMilliseconds;
     
@@ -539,6 +548,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     // Holding left/right repeats (and accelerates); everything else is once per press.
     if (_isSeekKey(key)) {
+      if (widget.isLive) return KeyEventResult.handled; // Nothing to seek in a live stream
       final forward = key == LogicalKeyboardKey.arrowRight || key == LogicalKeyboardKey.mediaFastForward;
       _seekBy(forward);
       return KeyEventResult.handled;
@@ -683,6 +693,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         ),
                       ),
                     ),
+                    if (widget.isLive)
+                      Row(
+                        children: const [
+                          Icon(Icons.circle, size: 12, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('EN DIRECTO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ],
+                      )
+                    else
                     StreamBuilder<Duration>(
                       stream: player.stream.duration,
                       initialData: player.state.duration,
@@ -726,9 +745,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       },
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'OK: pausa / reanudar    ◀ ▶: -10 s / +10 s (mantén para ir más rápido)    ▲: subtítulos    ▼: calidad',
-                      style: TextStyle(color: Colors.white54, fontSize: 13),
+                    Text(
+                      widget.isLive
+                          ? 'OK: pausa / reanudar    ▲: subtítulos    ▼: calidad'
+                          : 'OK: pausa / reanudar    ◀ ▶: -10 s / +10 s (mantén para ir más rápido)    ▲: subtítulos    ▼: calidad',
+                      style: const TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                   ],
                 ),
