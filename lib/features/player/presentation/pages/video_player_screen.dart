@@ -52,6 +52,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Timer? _seekDebounce;
   int _seekRepeats = 0;
 
+  // --- Start-up diagnostics: never leave the user on an endless spinner ---
+  static const _startTimeout = Duration(seconds: 25);
+  bool _started = false; // true once the first video frame size is known
+  String? _playbackError;
+  Timer? _startWatchdog;
+
   // --- End of playback ---
   StreamSubscription<bool>? _completedSub;
   bool _isEnding = false;
@@ -95,6 +101,24 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     player.stream.error.listen((event) {
       print('[VideoPlayer] ERROR: $event');
+      if (!_started && mounted) setState(() => _playbackError = event);
+    });
+
+    player.stream.buffering.listen((b) => print('[VideoPlayer] buffering=$b'));
+    player.stream.playing.listen((p) => print('[VideoPlayer] playing=$p'));
+    player.stream.width.listen((w) {
+      print('[VideoPlayer] video width=$w');
+      if ((w ?? 0) > 0) {
+        _started = true;
+        _startWatchdog?.cancel();
+        if (_playbackError != null && mounted) setState(() => _playbackError = null);
+      }
+    });
+    _startWatchdog = Timer(_startTimeout, () {
+      if (mounted && !_started) {
+        print('[VideoPlayer] No video after ${_startTimeout.inSeconds}s');
+        setState(() => _playbackError ??= 'El vídeo no ha empezado a reproducirse. Revisa la conexión o inténtalo de nuevo.');
+      }
     });
     
     _completedSub = player.stream.completed.listen((completed) {
@@ -309,6 +333,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void dispose() {
     _saveProgressTimer?.cancel();
+    _startWatchdog?.cancel();
     _overlayTimer?.cancel();
     _seekDebounce?.cancel();
     _endTimer?.cancel();
@@ -806,6 +831,32 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     navigator.pop();
   }
 
+  Widget _buildErrorBanner() {
+    return Positioned(
+      top: 24,
+      left: 24,
+      right: 24,
+      child: IgnorePointer(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.red[900],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(_playbackError!, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEndOverlay() {
     return Positioned.fill(
       child: GestureDetector(
@@ -977,6 +1028,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           else
             video,
           if (isTv) _buildTvOverlay(),
+          if (_playbackError != null && !_isEnding) _buildErrorBanner(),
           if (_isEnding) _buildEndOverlay(),
         ],
       ),
