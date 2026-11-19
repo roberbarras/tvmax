@@ -52,6 +52,7 @@ class _TvFocusWrapperState extends State<TvFocusWrapper> with SingleTickerProvid
 
   @override
   void dispose() {
+    _longPressTimer?.cancel();
     _focusNode.removeListener(_onFocusChange);
     // Only dispose if we created it
     if (widget.focusNode == null) {
@@ -62,6 +63,11 @@ class _TvFocusWrapperState extends State<TvFocusWrapper> with SingleTickerProvid
   }
 
   void _onFocusChange() {
+    if (!mounted) return;
+    if (!_focusNode.hasFocus) {
+      _longPressTimer?.cancel();
+      _keyDownSeen = false;
+    }
     setState(() {
       _isFocused = _focusNode.hasFocus;
     });
@@ -76,11 +82,15 @@ class _TvFocusWrapperState extends State<TvFocusWrapper> with SingleTickerProvid
 
   Timer? _longPressTimer;
   bool _isLongPress = false;
+  // True only if this node saw the key-down. Prevents a stray key-up (e.g. the
+  // release of an OK press that moved focus here) from triggering onTap.
+  bool _keyDownSeen = false;
 
   void _handleKeyDown(RawKeyEvent event) {
      if (event.repeat) return;
      
      if (_isValidKey(event.logicalKey)) {
+        _keyDownSeen = true;
         _isLongPress = false;
         _longPressTimer?.cancel();
         _longPressTimer = Timer(const Duration(milliseconds: 500), () {
@@ -94,7 +104,9 @@ class _TvFocusWrapperState extends State<TvFocusWrapper> with SingleTickerProvid
       if (_isValidKey(event.logicalKey)) {
          _longPressTimer?.cancel();
          
-         if (!_isLongPress) {
+         final wasDown = _keyDownSeen;
+         _keyDownSeen = false;
+         if (wasDown && !_isLongPress) {
             widget.onTap();
          }
       }

@@ -55,6 +55,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
             itemBuilder: (context, index) {
               final episode = provider.episodes[index];
               return ListTile(
+                autofocus: index == 0,
                 leading: Stack(
                   children: [
                     episode.imageUrl != null
@@ -139,6 +140,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
             child: const Text('Cerrar'),
           ),
           ElevatedButton(
+            autofocus: true,
             onPressed: () {
                Navigator.pop(dialogContext);
                _playVideoInternal(context, episode, episodesProvider);
@@ -274,6 +276,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
               itemBuilder: (context, index) {
                 final q = qualities[index];
                 return ListTile(
+                  autofocus: index == 0,
                   title: Text(q.label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   subtitle: Text(q.description, style: const TextStyle(color: Colors.white70)),
                   trailing: const Icon(Icons.download, color: Colors.orange),

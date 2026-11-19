@@ -232,7 +232,12 @@ class ManualFocusGridState<T> extends State<ManualFocusGrid<T>> {
        itemBuilder: (context, index) {
           final item = widget.items[index];
           // We wrap the item builder to inject OnKey
+          // This wrapper only listens for arrow keys bubbling up from the card.
+          // It must NOT be focusable itself: otherwise D-pad traversal can land
+          // on it (same rect as the card, no visible highlight) and OK does nothing.
           return Focus(
+             canRequestFocus: false,
+             skipTraversal: true,
              onKey: (node, event) => _onKeyHandler(node, event, index),
              child: Builder(
                 builder: (context) {

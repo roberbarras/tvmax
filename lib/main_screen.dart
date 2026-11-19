@@ -159,7 +159,15 @@ class _MainScreenState extends State<MainScreen> {
           child: Scaffold(
             body: IndexedStack(
               index: navProvider.currentIndex,
-              children: _screens,
+              // All tabs stay alive in the stack; hidden ones must not take
+              // part in D-pad traversal or focus can jump into an invisible tab.
+              children: [
+                for (int i = 0; i < _screens.length; i++)
+                  ExcludeFocus(
+                    excluding: i != navProvider.currentIndex,
+                    child: _screens[i],
+                  ),
+              ],
             ),
             bottomNavigationBar: FocusScope(
             node: navProvider.bottomBarFocusNode,
