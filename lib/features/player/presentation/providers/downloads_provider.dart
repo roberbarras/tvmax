@@ -51,7 +51,7 @@ class DownloadsProvider extends ChangeNotifier {
       );
       
       await _notificationsPlugin.initialize(
-         settings,
+         settings: settings,
          onDidReceiveNotificationResponse: (details) {
             // Handle click
          },
@@ -75,7 +75,7 @@ class DownloadsProvider extends ChangeNotifier {
       priority: Priority.high,
     );
     const details = NotificationDetails(android: androidDetails);
-    await _notificationsPlugin.show(id, title, body, details);
+    await _notificationsPlugin.show(id: id, title: title, body: body, notificationDetails: details);
   }
 
   @override
