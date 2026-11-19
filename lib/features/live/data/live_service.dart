@@ -33,8 +33,11 @@ class LiveService {
     LiveChannel(id: '5a6a172c7ed1a834493ebf6b', name: 'laSexta'),
   ];
 
-  // Plain HLS. The other entries are legacy/DASH/4K/SSAI variants we don't need.
-  static const _hlsType = 'application/vnd.apple.mpegurl';
+  // Preferred first: the "legacy" HLS ladder (audio+video muxed, no separate audio/subtitle
+  // renditions). The standard master playlist, with EXT-X-MEDIA groups, is not recognised as HLS
+  // by the libmpv build shipped for Android (mpv falls back to "plaintext playlist" and never plays).
+  // The remaining entries are DASH/4K/SSAI variants we don't need.
+  static const _preferredTypes = ['application/hls+legacy', 'application/vnd.apple.mpegurl'];
 
   /// Country Atresplayer sees for this device (live TV is geo-restricted to Spain).
   Future<void> _logIpLocation() async {
@@ -58,12 +61,12 @@ class LiveService {
     }
 
     final json = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    final sources = (json['sourcesLive'] as List?) ?? const [];
-    for (final source in sources) {
-      if (source is Map && source['type'] == _hlsType) {
+    final sources = ((json['sourcesLive'] as List?) ?? const []).whereType<Map>().toList();
+    for (final type in _preferredTypes) {
+      for (final source in sources) {
         final src = source['src'] as String?;
-        if (src != null && src.isNotEmpty) {
-          print('[LiveService] ${channel.name}: ${Uri.parse(src).host} -> ${json['titulo']}');
+        if (source['type'] == type && src != null && src.isNotEmpty) {
+          print('[LiveService] ${channel.name} ($type): ${Uri.parse(src).host} -> ${json['titulo']}');
           return LiveStream(url: src, programTitle: json['titulo'] as String?);
         }
       }
