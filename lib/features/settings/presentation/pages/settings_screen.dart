@@ -247,11 +247,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       isExpanded: true,
                       dropdownColor: Colors.grey[900],
                       items: const [
-                        DropdownMenuItem(value: 0, child: Text('Programas')),
-                        DropdownMenuItem(value: 1, child: Text('Noticias')),
-                        DropdownMenuItem(value: 2, child: Text('Series')),
-                        DropdownMenuItem(value: 3, child: Text('Documentales')),
-                        DropdownMenuItem(value: 7, child: Text('Directo')),
+                        DropdownMenuItem(value: 0, child: Text('Directo')),
+                        DropdownMenuItem(value: 1, child: Text('Programas')),
+                        DropdownMenuItem(value: 2, child: Text('Noticias')),
+                        DropdownMenuItem(value: 3, child: Text('Series')),
+                        DropdownMenuItem(value: 4, child: Text('Documentales')),
                       ],
                       onChanged: (value) {
                         if (value != null) provider.setDefaultSectionIndex(value);

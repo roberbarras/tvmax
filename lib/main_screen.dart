@@ -24,6 +24,8 @@ class _MainScreenState extends State<MainScreen> {
   // Removed local _selectedIndex
 
   final List<Widget> _screens = const [
+    // Order must match NavTab and the destinations below
+    LiveScreen(),
     ProgramsScreen(),
     NewsScreen(),
     SeriesScreen(),
@@ -31,7 +33,6 @@ class _MainScreenState extends State<MainScreen> {
     FavoritesScreen(),
     DownloadsScreen(),
     SettingsScreen(),
-    LiveScreen(),
   ];
   
   @override
@@ -47,9 +48,7 @@ class _MainScreenState extends State<MainScreen> {
       
       // Apply default section
       final settingsProvider = context.read<SettingsProvider>();
-      if (settingsProvider.defaultSectionIndex != 0) {
-         context.read<NavigationProvider>().setIndex(settingsProvider.defaultSectionIndex);
-      }
+      context.read<NavigationProvider>().setIndex(settingsProvider.defaultSectionIndex);
       
       // Request initial focus on Bottom Bar
       // We perform a delayed request to ensure the widget tree is ready and nodes are attached.
@@ -195,6 +194,11 @@ class _MainScreenState extends State<MainScreen> {
               },
               destinations: const [
                 NavigationDestination(
+                  icon: Icon(Icons.live_tv_outlined),
+                  selectedIcon: Icon(Icons.live_tv),
+                  label: 'Directo',
+                ),
+                NavigationDestination(
                   icon: Icon(Icons.home_outlined),
                   selectedIcon: Icon(Icons.home),
                   label: 'Programas',
@@ -228,11 +232,6 @@ class _MainScreenState extends State<MainScreen> {
                   icon: Icon(Icons.settings_outlined),
                   selectedIcon: Icon(Icons.settings),
                   label: 'Ajustes',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.live_tv_outlined),
-                  selectedIcon: Icon(Icons.live_tv),
-                  label: 'Directo',
                 ),
               ],
             ),
