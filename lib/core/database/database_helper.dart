@@ -73,9 +73,13 @@ CREATE TABLE episodes (
       await _createFavoritesTable(db);
     }
     if (oldVersion < 3) {
-      // Add categoryId column to favorites table
-      // Check if column exists first? standard add column
-      await db.execute('ALTER TABLE favorites ADD COLUMN categoryId TEXT');
+      // Add categoryId column to favorites table. Databases created at v2
+      // already have it (the table is created with that column), so check first.
+      final columns = await db.rawQuery('PRAGMA table_info(favorites)');
+      final hasCategoryId = columns.any((c) => c['name'] == 'categoryId');
+      if (!hasCategoryId) {
+        await db.execute('ALTER TABLE favorites ADD COLUMN categoryId TEXT');
+      }
     }
   }
 
