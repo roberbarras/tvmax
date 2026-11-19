@@ -87,8 +87,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     
     // Listen to logs for HW failures
     player.stream.log.listen((event) {
-      if (event.level == MPVLogLevel.error || event.level == MPVLogLevel.warn) {
-         print('[MPV] ${event.prefix}: ${event.text}');
+      // Until the first frame, log everything mpv says (network, demuxer...) to diagnose slow/stuck starts.
+      if (!_started || event.level == MPVLogLevel.error || event.level == MPVLogLevel.warn) {
+         print('[MPV] ${event.prefix}: ${event.text.trim()}');
       }
       if (_useHardwareAcceleration && !_hasFallenBack) {
          if (event.text.contains('hwaccel') && event.text.contains('error') || 

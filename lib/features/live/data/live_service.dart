@@ -36,7 +36,20 @@ class LiveService {
   // Plain HLS. The other entries are legacy/DASH/4K/SSAI variants we don't need.
   static const _hlsType = 'application/vnd.apple.mpegurl';
 
+  /// Country Atresplayer sees for this device (live TV is geo-restricted to Spain).
+  Future<void> _logIpLocation() async {
+    try {
+      final response = await client
+          .get(Uri.parse('${AppConstants.apiBaseUrl}/client/v1/ipLocation'), headers: AppConstants.liveHeaders)
+          .timeout(const Duration(seconds: 8));
+      print('[LiveService] ipLocation: ${response.statusCode} ${response.body}');
+    } catch (e) {
+      print('[LiveService] ipLocation failed: $e');
+    }
+  }
+
   Future<LiveStream> getStream(LiveChannel channel) async {
+    await _logIpLocation();
     final uri = Uri.parse('${AppConstants.apiBaseUrl}/player/v1/live/${channel.id}');
     final response = await client.get(uri, headers: AppConstants.liveHeaders).timeout(const Duration(seconds: 15));
 
@@ -50,6 +63,7 @@ class LiveService {
       if (source is Map && source['type'] == _hlsType) {
         final src = source['src'] as String?;
         if (src != null && src.isNotEmpty) {
+          print('[LiveService] ${channel.name}: ${Uri.parse(src).host} -> ${json['titulo']}');
           return LiveStream(url: src, programTitle: json['titulo'] as String?);
         }
       }
