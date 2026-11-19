@@ -122,18 +122,20 @@ class ProgramCard extends StatelessWidget {
                     child: Consumer<FavoritesProvider>(
                       builder: (context, favoritesProvider, _) {
                         final isFav = favoritesProvider.isFavorite(program.id);
-                        return IconButton(
-                          focusNode: FocusNode(canRequestFocus: false), // Prevent stealing focus (handled by Card)
-                          icon: Icon(
-                            isFav ? Icons.favorite : Icons.favorite_border,
-                            color: isFav ? Colors.red : Colors.white,
-                            shadows: const [
-                              Shadow(offset: Offset(0, 1), blurRadius: 2, color: Colors.black)
-                            ],
+                        // ExcludeFocus keeps the D-pad on the card (handled by TvFocusWrapper).
+                        return ExcludeFocus(
+                          child: IconButton(
+                            icon: Icon(
+                              isFav ? Icons.favorite : Icons.favorite_border,
+                              color: isFav ? Colors.red : Colors.white,
+                              shadows: const [
+                                Shadow(offset: Offset(0, 1), blurRadius: 2, color: Colors.black)
+                              ],
+                            ),
+                            onPressed: () {
+                               favoritesProvider.toggleFavorite(program);
+                            },
                           ),
-                          onPressed: () {
-                             favoritesProvider.toggleFavorite(program);
-                          },
                         );
                       },
                     ),
