@@ -8,3 +8,5 @@ class PremiumContentException implements Exception {
   PremiumContentException({this.statusCode});
 }
 class DownloadStuckException implements Exception {}
+/// The stream is DRM-protected. TVMax never plays or circumvents DRM.
+class DrmProtectedException implements Exception {}

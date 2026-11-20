@@ -1,9 +1,9 @@
 import 'package:http/http.dart' as http;
 
 class M3u8QualityParser {
-  static Future<List<VideoQuality>> getQualities(String m3u8Url) async {
+  static Future<List<VideoQuality>> getQualities(String m3u8Url, {Map<String, String>? headers}) async {
     try {
-      final response = await http.get(Uri.parse(m3u8Url));
+      final response = await http.get(Uri.parse(m3u8Url), headers: headers);
       if (response.statusCode == 200) {
         return _parseM3u8(response.body, m3u8Url);
       }

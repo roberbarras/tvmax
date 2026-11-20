@@ -28,6 +28,18 @@ void main() {
       expect(reloaded.order, nav.order);
     });
 
+    test('RTVE tab: after Documentales by default, appended to orders saved before it existed', () async {
+      SharedPreferences.setMockInitialValues({});
+      final fresh = NavigationProvider(sharedPreferences: await SharedPreferences.getInstance());
+      expect(fresh.order.indexOf(AppTab.rtve), fresh.order.indexOf(AppTab.documentaries) + 1);
+
+      final savedBeforeRtve = AppTab.values.where((t) => t != AppTab.rtve).map((t) => t.name).toList();
+      SharedPreferences.setMockInitialValues({'tab_order': savedBeforeRtve});
+      final upgraded = NavigationProvider(sharedPreferences: await SharedPreferences.getInstance());
+      expect(upgraded.order.last, AppTab.rtve);
+      expect(upgraded.order.toSet(), AppTab.values.toSet());
+    });
+
     test('unknown or missing saved tabs are tolerated', () async {
       SharedPreferences.setMockInitialValues({
         'tab_order': ['series', 'does_not_exist', 'live'],

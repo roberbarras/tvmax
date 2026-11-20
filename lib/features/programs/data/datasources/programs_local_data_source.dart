@@ -1,5 +1,6 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/program_model.dart';
 
@@ -10,9 +11,9 @@ abstract class ProgramsLocalDataSource {
   /// Saves a fresh batch of programs to the database.
   Future<void> cachePrograms(List<ProgramModel> programs);
 
-  /// Retrieves the last known list of programs.
+  /// Retrieves the last known list of programs of [source].
   /// Throws a [CacheException] if the cupboard is bare.
-  Future<List<ProgramModel>> getLastPrograms();
+  Future<List<ProgramModel>> getLastPrograms({ContentSource source = ContentSource.atresplayer});
 }
 
 class ProgramsLocalDataSourceImpl implements ProgramsLocalDataSource {
@@ -38,12 +39,15 @@ class ProgramsLocalDataSourceImpl implements ProgramsLocalDataSource {
   }
 
   @override
-  Future<List<ProgramModel>> getLastPrograms() async {
+  Future<List<ProgramModel>> getLastPrograms({ContentSource source = ContentSource.atresplayer}) async {
     final db = await databaseHelper.database;
-    final result = await db.query('programs');
-    
+    // Rows cached before sources existed have no source: they are Atresplayer.
+    final result = source == ContentSource.atresplayer
+        ? await db.query('programs', where: 'source IS NULL OR source = ?', whereArgs: [source.name])
+        : await db.query('programs', where: 'source = ?', whereArgs: [source.name]);
+
     if (result.isNotEmpty) {
-      return result.map((json) => ProgramModel.fromJson(json)).toList();
+      return result.map((json) => ProgramModel.fromDb(json)).toList();
     } else {
       throw CacheException();
     }

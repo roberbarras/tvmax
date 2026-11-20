@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../../core/presentation/widgets/tv_focus_wrapper.dart';
 import '../../../../core/providers/navigation_provider.dart';
 import '../../../favorites/presentation/providers/favorites_provider.dart';
@@ -116,6 +117,22 @@ class ProgramCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (program.source == ContentSource.rtve)
+                    Positioned(
+                      top: 10,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE4002B), // RTVE red
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          program.source.label,
+                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: 4,
                     right: 4,

@@ -6,6 +6,7 @@ import 'features/programs/presentation/providers/programs_provider.dart';
 import 'features/programs/presentation/providers/news_provider.dart';
 import 'features/programs/presentation/providers/series_provider.dart';
 import 'features/programs/presentation/providers/documentaries_provider.dart';
+import 'features/programs/presentation/providers/rtve_provider.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
 import 'features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:media_kit/media_kit.dart';
@@ -71,6 +72,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => di.sl<DocumentariesProvider>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => di.sl<RtveProvider>(),
         ),
         ChangeNotifierProvider(
           create: (_) => di.sl<DownloadsProvider>(),

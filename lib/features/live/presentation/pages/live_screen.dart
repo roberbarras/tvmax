@@ -19,6 +19,8 @@ class _LiveScreenState extends State<LiveScreen> {
   static const _brandColors = {
     '5a6a165a7ed1a834493ebf6a': Color(0xFFE65100), // Antena 3
     '5a6a172c7ed1a834493ebf6b': Color(0xFFAD1457), // laSexta
+    '1694255': Color(0xFFC62828), // 24h
+    '5466990': Color(0xFF6A1B9A), // Clan
   };
 
   Future<void> _open(LiveChannel channel) async {
@@ -39,6 +41,7 @@ class _LiveScreenState extends State<LiveScreen> {
             title: title,
             episodeId: 'live_${channel.id}',
             isLive: true,
+            source: channel.source,
           ),
         ),
       );
@@ -48,9 +51,11 @@ class _LiveScreenState extends State<LiveScreen> {
       final blocked = e is ServerException && (e.statusCode == 403 || e.statusCode == 404);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(blocked
-              ? 'El directo de ${channel.name} no está disponible (¿fuera de España?).'
-              : 'No se pudo abrir el directo de ${channel.name}. Inténtalo de nuevo.'),
+          content: Text(e is DrmProtectedException
+              ? 'El directo de ${channel.name} es contenido protegido, no disponible.'
+              : blocked
+                  ? 'El directo de ${channel.name} no está disponible (¿fuera de España?).'
+                  : 'No se pudo abrir el directo de ${channel.name}. Inténtalo de nuevo.'),
         ),
       );
     } finally {

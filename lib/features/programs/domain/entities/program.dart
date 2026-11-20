@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../../core/entities/content_source.dart';
 
 /// Represents a TV Show, Series, or Program in the catalog.
 class Program extends Equatable {
@@ -23,6 +24,9 @@ class Program extends Equatable {
   /// Optional Category ID mainly used for navigation/filtering context.
   final String? categoryId;
 
+  /// Catalog the program belongs to; decides how its episodes are fetched and played.
+  final ContentSource source;
+
   const Program({
     required this.id,
     required this.title,
@@ -31,8 +35,9 @@ class Program extends Equatable {
     this.imageUrlVertical,
     required this.channel,
     this.categoryId,
+    this.source = ContentSource.atresplayer,
   });
 
   @override
-  List<Object?> get props => [id, title, description, imageUrlHorizontal, imageUrlVertical, channel, categoryId];
+  List<Object?> get props => [id, title, description, imageUrlHorizontal, imageUrlVertical, channel, categoryId, source];
 }

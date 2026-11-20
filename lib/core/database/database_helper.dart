@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common/sqlite_api.dart';
@@ -29,13 +30,14 @@ class DatabaseHelper {
 
     return await openDatabase(
       path, 
-      version: 3, 
-      onCreate: _createDB,
-      onUpgrade: _onUpgrade,
+      version: 4,
+      onCreate: createDB,
+      onUpgrade: onUpgrade,
     );
   }
 
-  Future _createDB(Database db, int version) async {
+  @visibleForTesting
+  static Future createDB(Database db, int version) async {
     const idType = 'TEXT PRIMARY KEY';
     const textType = 'TEXT NOT NULL';
     const textNullable = 'TEXT';
@@ -48,7 +50,8 @@ CREATE TABLE programs (
   description $textType,
   imageUrlHorizontal $textNullable,
   imageUrlVertical $textNullable,
-  channel $textType
+  channel $textType,
+  source $textNullable
   )
 ''');
 
@@ -61,14 +64,17 @@ CREATE TABLE episodes (
   imageUrl $textNullable,
   duration $textNullable,
   publishDate $intNullable,
-  formatId $textType
+  formatId $textType,
+  source $textNullable,
+  drmProtected $intNullable
   )
 ''');
 
     await _createFavoritesTable(db);
   }
 
-  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  @visibleForTesting
+  static Future onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createFavoritesTable(db);
     }
@@ -81,9 +87,24 @@ CREATE TABLE episodes (
         await db.execute('ALTER TABLE favorites ADD COLUMN categoryId TEXT');
       }
     }
+    if (oldVersion < 4) {
+      // Content source (atresplayer/rtve). Old rows keep NULL, read as Atresplayer.
+      // Favorites created by the v1 -> v2 step above already have the column.
+      await _addColumnIfMissing(db, 'programs', 'source', 'TEXT');
+      await _addColumnIfMissing(db, 'episodes', 'source', 'TEXT');
+      await _addColumnIfMissing(db, 'episodes', 'drmProtected', 'INTEGER');
+      await _addColumnIfMissing(db, 'favorites', 'source', 'TEXT');
+    }
   }
 
-  Future _createFavoritesTable(Database db) async {
+  static Future<void> _addColumnIfMissing(Database db, String table, String column, String type) async {
+    final columns = await db.rawQuery('PRAGMA table_info($table)');
+    if (!columns.any((c) => c['name'] == column)) {
+      await db.execute('ALTER TABLE $table ADD COLUMN $column $type');
+    }
+  }
+
+  static Future _createFavoritesTable(Database db) async {
     const idType = 'TEXT PRIMARY KEY';
     const textType = 'TEXT NOT NULL';
     const textNullable = 'TEXT';
@@ -96,7 +117,8 @@ CREATE TABLE favorites (
   imageUrl $textNullable,
   channel $textType,
   addedAt $intNullable,
-  categoryId $textNullable
+  categoryId $textNullable,
+  source $textNullable
   )
 ''');
   }
