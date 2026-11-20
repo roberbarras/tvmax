@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../programs/domain/entities/program.dart';
 
 class FavoritesProvider extends ChangeNotifier {
@@ -28,6 +29,7 @@ class FavoritesProvider extends ChangeNotifier {
         imageUrlVertical: json['imageUrl'] as String?,
         channel: json['channel'] as String? ?? 'Desconocido',
         categoryId: json['categoryId'] as String?,
+        source: ContentSource.fromName(json['source'] as String?),
       );
     }).toList();
     
@@ -46,6 +48,10 @@ class FavoritesProvider extends ChangeNotifier {
      return _favorites.where((p) => p.categoryId == categoryId).toList();
   }
 
+  List<Program> getFavoritesBySource(ContentSource source) {
+     return _favorites.where((p) => p.source == source).toList();
+  }
+
   Future<void> toggleFavorite(Program program) async {
     final db = await dbHelper.database;
     
@@ -60,6 +66,7 @@ class FavoritesProvider extends ChangeNotifier {
         'channel': program.channel,
         'addedAt': DateTime.now().millisecondsSinceEpoch,
         'categoryId': program.categoryId, // Ensure Program has this populated when passed!
+        'source': program.source.name,
       });
       _favorites.add(program);
       

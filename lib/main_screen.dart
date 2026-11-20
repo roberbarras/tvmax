@@ -3,6 +3,7 @@ import '../../features/programs/presentation/pages/programs_screen.dart';
 import '../../features/programs/presentation/pages/news_screen.dart';
 import '../../features/programs/presentation/pages/series_screen.dart';
 import '../../features/programs/presentation/pages/documentaries_screen.dart';
+import '../../features/programs/presentation/pages/rtve_screen.dart';
 import '../../features/favorites/presentation/pages/favorites_screen.dart';
 import '../../features/player/presentation/pages/downloads_screen.dart';
 import '../../features/settings/presentation/pages/settings_screen.dart';
@@ -32,6 +33,7 @@ class _MainScreenState extends State<MainScreen> {
     NewsScreen(),
     SeriesScreen(),
     DocumentariesScreen(),
+    RtveScreen(),
     FavoritesScreen(),
     DownloadsScreen(),
     SettingsScreen(),

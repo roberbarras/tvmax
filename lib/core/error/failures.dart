@@ -44,3 +44,8 @@ class PremiumContentFailure extends Failure {
 class DownloadStuckFailure extends Failure {
   const DownloadStuckFailure([super.message = 'Download Stuck']);
 }
+
+/// The content is DRM-protected, so it is skipped instead of played.
+class DrmProtectedFailure extends Failure {
+  const DrmProtectedFailure([super.message = 'Contenido protegido, no disponible']);
+}

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 
@@ -13,12 +14,23 @@ import '../datasources/programs_local_data_source.dart';
 /// Get data from the Cloud. If that fails, scrape whatever we have left in the local database.
 class ProgramsRepositoryImpl implements ProgramsRepository {
   final ProgramsRemoteDataSource remoteDataSource;
+  final ProgramsRemoteDataSource rtveRemoteDataSource;
   final ProgramsLocalDataSource localDataSource;
 
   ProgramsRepositoryImpl({
     required this.remoteDataSource,
+    required this.rtveRemoteDataSource,
     required this.localDataSource,
   });
+
+  ProgramsRemoteDataSource _remoteFor(ContentSource source) {
+    switch (source) {
+      case ContentSource.atresplayer:
+        return remoteDataSource;
+      case ContentSource.rtve:
+        return rtveRemoteDataSource;
+    }
+  }
 
   /// Fetches programs, prioritizing fresh data.
   ///
@@ -32,9 +44,10 @@ class ProgramsRepositoryImpl implements ProgramsRepository {
     int page = 0,
     String? mainChannelId,
     String? categoryId,
+    ContentSource source = ContentSource.atresplayer,
   }) async {
     try {
-      final remotePrograms = await remoteDataSource.getPrograms(
+      final remotePrograms = await _remoteFor(source).getPrograms(
         page: page,
         mainChannelId: mainChannelId,
         categoryId: categoryId,
@@ -49,7 +62,7 @@ class ProgramsRepositoryImpl implements ProgramsRepository {
       }
       // Fallback to cache: "Do we have anything in the fridge?"
       try {
-        final localPrograms = await localDataSource.getLastPrograms();
+        final localPrograms = await localDataSource.getLastPrograms(source: source);
         return Right(localPrograms);
       } catch (cacheError) {
         // Empty fridge. Starvation.

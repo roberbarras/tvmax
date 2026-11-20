@@ -1,3 +1,5 @@
+import '../entities/content_source.dart';
+
 class AppConstants {
   static const String apiBaseUrl = 'https://api.atresplayer.com';
   
@@ -22,6 +24,29 @@ class AppConstants {
     'referer': 'https://www.atresplayer.com/',
     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0',
   };
+
+  // RTVE needs no account. ztnr.rtve.es rejects requests without a browser user-agent.
+  static const Map<String, String> rtveHeaders = {
+    'referer': 'https://www.rtve.es/',
+    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0',
+  };
+
+  static const String rtveApiBaseUrl = 'https://www.rtve.es/api';
+  // "Medio" 850 is television: it leaves out the radio and podcast programs.
+  static const String rtveTvMedioId = '850';
+  // Video type of full episodes (the rest are clips, trailers, extras...).
+  static const String rtveFullEpisodeType = '39816';
+
+  /// Headers for media and API requests of [source]. The Atresplayer cookie
+  /// is never sent to RTVE hosts.
+  static Map<String, String> headersFor(ContentSource source, String? cookie) {
+    switch (source) {
+      case ContentSource.atresplayer:
+        return getHeaders(cookie);
+      case ContentSource.rtve:
+        return rtveHeaders;
+    }
+  }
 
   static Map<String, String> getHeaders(String? cookie) {
     if (cookie != null && cookie.isNotEmpty) {

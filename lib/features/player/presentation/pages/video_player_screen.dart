@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:provider/provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../../core/utils/constants.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -17,6 +18,8 @@ class VideoPlayerScreen extends StatefulWidget {
   final String episodeId;
   // Live channel: no resume dialog, no progress saving, no seeking.
   final bool isLive;
+  // Decides the request headers: the Atresplayer cookie never goes to other hosts.
+  final ContentSource source;
 
   const VideoPlayerScreen({
     super.key, 
@@ -24,6 +27,7 @@ class VideoPlayerScreen extends StatefulWidget {
     required this.title,
     required this.episodeId,
     this.isLive = false,
+    this.source = ContentSource.atresplayer,
   });
 
   @override
@@ -150,10 +154,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _checkDeviceCapabilities();
   }
 
-  // Live streams are public, so the session cookie is only sent for on-demand content.
+  // Live streams are public, so the session cookie is only sent for on-demand Atresplayer content.
   Map<String, String> _mediaHeaders() {
-    if (widget.isLive) return AppConstants.liveHeaders;
-    return AppConstants.getHeaders(context.read<SettingsProvider>().cookie);
+    if (widget.isLive && widget.source == ContentSource.atresplayer) return AppConstants.liveHeaders;
+    return AppConstants.headersFor(widget.source, context.read<SettingsProvider>().cookie);
   }
 
   // Android TV exposes the leanback feature. There we replace the touch

@@ -9,6 +9,7 @@ enum AppTab {
   news('Noticias', Icons.newspaper_outlined, Icons.newspaper),
   series('Series', Icons.movie_creation_outlined, Icons.movie_creation),
   documentaries('Documentales', Icons.videocam_outlined, Icons.videocam),
+  rtve('RTVE', Icons.tv_outlined, Icons.tv),
   favorites('Favoritos', Icons.favorite_outline, Icons.favorite),
   downloads('Descargas', Icons.download_outlined, Icons.download),
   settings('Ajustes', Icons.settings_outlined, Icons.settings);

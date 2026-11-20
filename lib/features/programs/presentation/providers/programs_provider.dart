@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/program.dart';
 import '../../domain/usecases/get_programs.dart';
@@ -63,8 +64,8 @@ class ProgramsProvider extends ChangeNotifier {
       failure = null;
       _isLoadingBackground = false; 
       
-      // 1. Initial Load: Start with Favorites
-      final localFavs = favoritesProvider.favorites;
+      // 1. Initial Load: Start with Favorites (RTVE ones live in their own tab)
+      final localFavs = favoritesProvider.getFavoritesBySource(ContentSource.atresplayer);
       _allPrograms = List.from(localFavs);
       
       // Reset displayed list immediately to show favorites
@@ -173,7 +174,7 @@ class ProgramsProvider extends ChangeNotifier {
       // Yes, _onFavoritesChanged triggers this.
       
       // Re-construct logic to ensure Favorites are ALWAYS at top if query is empty
-      final favs = favoritesProvider.favorites;
+      final favs = favoritesProvider.getFavoritesBySource(ContentSource.atresplayer);
       final favIds = favs.map((p) => p.id).toSet();
       
       // Non-favs from our accumulated list

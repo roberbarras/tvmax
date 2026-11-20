@@ -56,6 +56,8 @@ Elige la versión adecuada para tu dispositivo:
 *   **Reproductor Híbrido**:
     *   Soporte para subtítulos y selección de calidad manual o automática.
     *   **Fallback Automático (Linux)**: Cambio automático a renderizado por software en caso de fallo de drivers gráficos.
+*   **RTVE**:
+    *   Catálogo de televisión de RTVE y directos de 24h y Clan, sin cuenta. El contenido con DRM se muestra como protegido y nunca se reproduce.
 *   **Gestión de Sesión**:
     *   Posibilidad de utilizar cuenta propia (Free o Premium) mediante inyección de cookie de sesión.
 

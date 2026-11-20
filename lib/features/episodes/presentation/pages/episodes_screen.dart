@@ -2,8 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../injection_container.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/utils/constants.dart';
 import '../../../programs/domain/entities/program.dart';
+import '../../domain/entities/episode.dart';
 import '../providers/episodes_provider.dart';
 import '../../../../core/providers/navigation_provider.dart';
 // import '../widgets/episode_detail_dialog.dart'; // To be implemented
@@ -26,7 +29,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EpisodesProvider>().fetchEpisodes(widget.program.id);
+      context.read<EpisodesProvider>().fetchEpisodes(widget.program.id, source: widget.program.source);
     });
   }
 
@@ -85,6 +88,11 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
                 title: Text(episode.title),
                 subtitle: Text(episode.description, maxLines: 2, overflow: TextOverflow.ellipsis),
                 onTap: () {
+                   if (episode.drmProtected ||
+                       provider.episodeAvailability[episode.id] == EpisodesProvider.drmProtectedStatus) {
+                     _showDrmProtectedDialog(context);
+                     return;
+                   }
                    // Show dialog
                    _showEpisodeOptions(context, episode);
                 },
@@ -105,6 +113,9 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
     if (statusCode == 200) {
       text = 'OK';
       color = Colors.green;
+    } else if (statusCode == EpisodesProvider.drmProtectedStatus) {
+      text = 'PROTEGIDO';
+      color = Colors.blueGrey;
     } else if (statusCode == 403 || statusCode == 401) {
       text = 'PREMIUM';
       color = Colors.red;
@@ -119,7 +130,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
     return AvailabilityBanner(text: text, color: color);
   }
 
-  void _showEpisodeOptions(BuildContext context, dynamic episode) { // Keep dynamic or Episode if imported
+  void _showEpisodeOptions(BuildContext context, Episode episode) {
     // Capture providers from the valid context BEFORE showing the dialog
     final episodesProvider = Provider.of<EpisodesProvider>(context, listen: false);
     final downloadsProvider = Provider.of<DownloadsProvider>(context, listen: false);
@@ -161,12 +172,12 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
     );
   }
 
-  Future<void> _playVideoInternal(BuildContext context, dynamic episode, EpisodesProvider episodesProvider) async {
+  Future<void> _playVideoInternal(BuildContext context, Episode episode, EpisodesProvider episodesProvider) async {
     try {
-      final url = await episodesProvider.fetchStreamingUrl(episode.id);
+      final url = await episodesProvider.fetchStreamingUrl(episode.id, source: episode.source);
       
       if (url != null) {
-         if (!mounted) return;
+         if (!context.mounted) return;
          Navigator.push(
            context,
            MaterialPageRoute(
@@ -174,22 +185,49 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
                 url: url, 
                 title: episode.title,
                 episodeId: episode.id,
+                source: episode.source,
              ),
            ),
          );
-      } else {
-        // Check for specific failures
-        if (episodesProvider.failure is PremiumContentFailure) {
-           _showPremiumErrorDialog(context);
-        } else if (episodesProvider.failure != null) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text('Error: ${episodesProvider.failure!.message}')),
-           );
-        }
+      } else if (context.mounted) {
+        _showPlaybackFailure(context, episodesProvider.playbackFailure);
       }
     } catch (e) {
       print('Error playing video: $e');
     }
+  }
+
+  void _showPlaybackFailure(BuildContext context, Failure? failure) {
+    if (failure is DrmProtectedFailure) {
+      _showDrmProtectedDialog(context);
+    } else if (failure is PremiumContentFailure) {
+      _showPremiumErrorDialog(context);
+    } else if (failure != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${failure.message}')),
+      );
+    }
+  }
+
+  // TVMax never plays or works around DRM: the episode is listed but skipped.
+  void _showDrmProtectedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Contenido protegido'),
+        content: const Text(
+          'Este vídeo está protegido con DRM y no está disponible en TVMax.\n\n'
+          'Prueba con otro episodio.'
+        ),
+        actions: [
+          TextButton(
+            autofocus: true,
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showPremiumErrorDialog(BuildContext context) {
@@ -221,16 +259,18 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
 
   Future<void> _startDownloadWithProvider(
       BuildContext context, 
-      dynamic episode, 
+      Episode episode, 
       EpisodesProvider episodesProvider, 
       DownloadsProvider downloadsProvider
   ) async {
       try {
-        final url = await episodesProvider.fetchStreamingUrl(episode.id);
+        final url = await episodesProvider.fetchStreamingUrl(episode.id, source: episode.source);
         
-        if (url != null) {
+        if (url == null) {
+           if (context.mounted) _showPlaybackFailure(context, episodesProvider.playbackFailure);
+        } else {
            // 1. Fetch Qualities
-           if (!mounted) return;
+           if (!context.mounted) return;
            
            // Show loading indicator
            showDialog(
@@ -239,9 +279,13 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
              builder: (_) => const Center(child: CircularProgressIndicator()),
            );
            
-           final qualities = await M3u8QualityParser.getQualities(url);
+           // Atresplayer playlists are fetched without headers, as before.
+           final qualities = await M3u8QualityParser.getQualities(
+             url,
+             headers: episode.source == ContentSource.rtve ? AppConstants.rtveHeaders : null,
+           );
            
-           if (!mounted) return;
+           if (!context.mounted) return;
            Navigator.pop(context); // Dismiss loading
            
            if (qualities.isNotEmpty) {
@@ -259,7 +303,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
 
   void _showQualitySelectionDialog(
       BuildContext context, 
-      dynamic episode, 
+      Episode episode, 
       List<VideoQuality> qualities, 
       DownloadsProvider downloadsProvider
   ) {
@@ -298,7 +342,7 @@ class _EpisodesScreenState extends State<EpisodesScreen> {
       );
   }
 
-  void _triggerDownload(BuildContext context, dynamic episode, String url, String qualityLabel, DownloadsProvider provider) {
+  void _triggerDownload(BuildContext context, Episode episode, String url, String qualityLabel, DownloadsProvider provider) {
        final fileName = '${widget.program.title} - ${episode.title} [$qualityLabel]';
        provider.addDownload(episode.id, fileName, url);
        

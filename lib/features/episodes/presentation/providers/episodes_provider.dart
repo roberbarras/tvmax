@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/entities/content_source.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/episode.dart';
 import '../../domain/usecases/get_episodes.dart';
@@ -32,6 +33,9 @@ class EpisodesProvider extends ChangeNotifier {
   List<Episode> episodes = [];
   bool isLoading = false;
   Failure? failure;
+  /// Why the last [fetchStreamingUrl] failed. Kept apart from [failure] so a
+  /// failed play doesn't replace the episode list with an error.
+  Failure? playbackFailure;
   
   String? currentStreamingUrl;
   bool isUrlLoading = false;
@@ -40,11 +44,16 @@ class EpisodesProvider extends ChangeNotifier {
   bool _hasMore = true;
   bool _isLoadingBackground = false;
   String? _currentFormatId;
+  ContentSource _source = ContentSource.atresplayer;
 
-  Future<void> fetchEpisodes(String formatId) async {
+  /// Availability code of episodes that are DRM-protected (never played).
+  static const drmProtectedStatus = -1;
+
+  Future<void> fetchEpisodes(String formatId, {ContentSource source = ContentSource.atresplayer}) async {
     // Reset if new format
     if (_currentFormatId != formatId) {
        _currentFormatId = formatId;
+       _source = source;
        isLoading = true;
        episodes = [];
        _allEpisodes = [];
@@ -60,7 +69,7 @@ class EpisodesProvider extends ChangeNotifier {
        return;
     }
 
-    final result = await getEpisodes(GetEpisodesParams(formatId: formatId, page: 0));
+    final result = await getEpisodes(GetEpisodesParams(formatId: formatId, page: 0, source: _source));
 
     List<Episode>? episodesToCheck;
 
@@ -103,7 +112,7 @@ class EpisodesProvider extends ChangeNotifier {
 
           // Execute batch in parallel
           await Future.wait(
-             batch.map((ep) => checkAvailability(ep.id))
+             batch.map(checkAvailability)
           );
           
           // Small throttle between batches to be safe
@@ -120,15 +129,25 @@ class EpisodesProvider extends ChangeNotifier {
   /// If the server says 403, we know it's Premium.
   /// If it says 200, it's Free.
   /// We cache the result in [episodeAvailability] map to avoid spamming the server.
-  Future<void> checkAvailability(String episodeId) async {
+  /// Episodes the provider already flags as DRM-protected are never probed.
+  Future<void> checkAvailability(Episode episode) async {
+    final episodeId = episode.id;
     if (episodeAvailability.containsKey(episodeId)) return; // Already checked
 
+    if (episode.drmProtected) {
+      episodeAvailability[episodeId] = drmProtectedStatus;
+      notifyListeners();
+      return;
+    }
+
     // Probe the URL to check status code
-    final result = await getStreamingUrl(GetStreamingUrlParams(contentId: episodeId));
+    final result = await getStreamingUrl(GetStreamingUrlParams(contentId: episodeId, source: episode.source));
     
     result.fold(
       (l) {
-        if (l is PremiumContentFailure) {
+        if (l is DrmProtectedFailure) {
+           episodeAvailability[episodeId] = drmProtectedStatus;
+        } else if (l is PremiumContentFailure) {
            episodeAvailability[episodeId] = l.statusCode ?? 403;
         } else if (l is ServerFailure) {
            episodeAvailability[episodeId] = l.statusCode ?? 500;
@@ -151,7 +170,7 @@ class EpisodesProvider extends ChangeNotifier {
     while (_hasMore && _isLoadingBackground && _currentFormatId == formatId) {
       await Future.delayed(const Duration(milliseconds: 500));
       
-      final result = await getEpisodes(GetEpisodesParams(formatId: formatId, page: _currentPage + 1));
+      final result = await getEpisodes(GetEpisodesParams(formatId: formatId, page: _currentPage + 1, source: _source));
       
       result.fold(
         (l) {
@@ -190,16 +209,17 @@ class EpisodesProvider extends ChangeNotifier {
     }
   }
 
-  Future<String?> fetchStreamingUrl(String contentId) async {
+  Future<String?> fetchStreamingUrl(String contentId, {ContentSource source = ContentSource.atresplayer}) async {
     isUrlLoading = true;
+    playbackFailure = null;
     notifyListeners();
 
-    final result = await getStreamingUrl(GetStreamingUrlParams(contentId: contentId));
+    final result = await getStreamingUrl(GetStreamingUrlParams(contentId: contentId, source: source));
 
     String? url;
     result.fold(
       (l) {
-        failure = l;
+        playbackFailure = l;
         isUrlLoading = false;
         notifyListeners(); // Notify so UI can see failure
       },

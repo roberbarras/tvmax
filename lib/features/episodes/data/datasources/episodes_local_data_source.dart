@@ -41,7 +41,7 @@ class EpisodesLocalDataSourceImpl implements EpisodesLocalDataSource {
     );
     
     if (result.isNotEmpty) {
-      return result.map((json) => EpisodeModel.fromJson(json)).toList();
+      return result.map((json) => EpisodeModel.fromDb(json)).toList();
     } else {
       throw CacheException();
     }

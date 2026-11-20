@@ -253,6 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         AppTab.news,
                         AppTab.series,
                         AppTab.documentaries,
+                        AppTab.rtve,
                       ].map((tab) => DropdownMenuItem(value: tab, child: Text(tab.label))).toList(),
                       onChanged: (value) {
                         if (value != null) provider.setDefaultSection(value);

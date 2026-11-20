@@ -83,7 +83,9 @@ Para acceder a capítulos completos, contenido Premium o evitar restricciones ge
 ## 4. Uso de la Aplicación
 
 ### Navegación
-*   **Barra Inferior:** Acceso rápido a Programas, Series, Documentales, Noticias, Favoritos y Ajustes.
+*   **Barra Inferior:** Acceso rápido a Programas, Directo, Noticias, Series, Documentales, RTVE, Favoritos, Descargas y Ajustes.
+*   **RTVE:** Catálogo de programas de televisión de RTVE (La 1, La 2, Clan, Teledeporte...). No necesita cuenta ni cookie. Los episodios que RTVE marca como protegidos (DRM) aparecen con la etiqueta **PROTEGIDO** y no se pueden ver ni descargar.
+*   **Directo:** Antena 3, laSexta, 24h y Clan. La 1, La 2 y Teledeporte no están disponibles porque sus directos usan DRM.
 *   **Favoritos:** Utiliza el icono del corazón en la ficha de cualquier contenido para añadirlo a tu lista de seguimiento.
 
 ### Reproductor

@@ -5,6 +5,7 @@ import 'features/live/data/live_service.dart';
 import 'core/database/database_helper.dart';
 import 'features/episodes/data/datasources/episodes_local_data_source.dart';
 import 'features/episodes/data/datasources/episodes_remote_data_source.dart';
+import 'features/episodes/data/datasources/rtve_episodes_remote_data_source.dart';
 import 'features/episodes/data/repositories/episodes_repository_impl.dart';
 import 'features/episodes/domain/repositories/episodes_repository.dart';
 import 'features/episodes/domain/usecases/get_episodes.dart';
@@ -21,6 +22,7 @@ import 'features/favorites/presentation/providers/favorites_provider.dart';
 import 'features/programs/data/datasources/programs_local_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/programs/data/datasources/programs_remote_data_source.dart';
+import 'features/programs/data/datasources/rtve_programs_remote_data_source.dart';
 import 'features/programs/data/repositories/programs_repository_impl.dart';
 import 'features/programs/domain/repositories/programs_repository.dart';
 import 'features/programs/domain/usecases/get_programs.dart';
@@ -28,6 +30,7 @@ import 'features/programs/presentation/providers/programs_provider.dart';
 import 'features/programs/presentation/providers/news_provider.dart'; // Import NewsProvider
 import 'features/programs/presentation/providers/series_provider.dart';
 import 'features/programs/presentation/providers/documentaries_provider.dart';
+import 'features/programs/presentation/providers/rtve_provider.dart';
 import 'core/providers/navigation_provider.dart';
 
 import 'dart:io';
@@ -43,19 +46,25 @@ Future<void> init() async {
   sl.registerFactory(() => NewsProvider(getPrograms: sl(), favoritesProvider: sl())); // Register NewsProvider
   sl.registerFactory(() => SeriesProvider(getPrograms: sl(), favoritesProvider: sl())); // Register SeriesProvider
   sl.registerFactory(() => DocumentariesProvider(getPrograms: sl(), favoritesProvider: sl())); // Register DocumentariesProvider
+  sl.registerFactory(() => RtveProvider(getPrograms: sl(), favoritesProvider: sl()));
 
   // Use cases
   sl.registerLazySingleton(() => GetPrograms(sl()));
 
   // Repository
   sl.registerLazySingleton<ProgramsRepository>(
-    () => ProgramsRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
+    () => ProgramsRepositoryImpl(
+      remoteDataSource: sl(),
+      rtveRemoteDataSource: sl<RtveProgramsRemoteDataSource>(),
+      localDataSource: sl(),
+    ),
   );
 
   // Data sources
   sl.registerLazySingleton<ProgramsRemoteDataSource>(
     () => ProgramsRemoteDataSourceImpl(client: sl(), sharedPreferences: sl()),
   );
+  sl.registerLazySingleton(() => RtveProgramsRemoteDataSource(client: sl()));
   sl.registerLazySingleton<ProgramsLocalDataSource>(
     () => ProgramsLocalDataSourceImpl(databaseHelper: sl()),
   );
@@ -75,13 +84,18 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<EpisodesRepository>(
-    () => EpisodesRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
+    () => EpisodesRepositoryImpl(
+      remoteDataSource: sl(),
+      rtveRemoteDataSource: sl<RtveEpisodesRemoteDataSource>(),
+      localDataSource: sl(),
+    ),
   );
 
   // Data sources
   sl.registerLazySingleton<EpisodesRemoteDataSource>(
     () => EpisodesRemoteDataSourceImpl(client: sl(), sharedPreferences: sl()),
   );
+  sl.registerLazySingleton(() => RtveEpisodesRemoteDataSource(client: sl()));
   sl.registerLazySingleton<EpisodesLocalDataSource>(
     () => EpisodesLocalDataSourceImpl(databaseHelper: sl()),
   );
