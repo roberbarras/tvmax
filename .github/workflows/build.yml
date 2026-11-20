@@ -57,8 +57,10 @@ jobs:
         # apt mirrors occasionally hang; fail fast instead of blocking the run for hours
         timeout-minutes: 15
         run: |
+          # The runner's default Azure mirror can be extremely slow serving packages; use the main archive
+          echo "http://archive.ubuntu.com/ubuntu" | sudo tee /etc/apt/apt-mirrors.txt
           sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update
-          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev wget fuse libasound2-dev libmpv-dev mpv rpm
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev wget fuse libasound2-dev libmpv-dev rpm
 
       - name: Download External Binaries (yt-dlp, ffmpeg)
         # We need these for the "Full" version
