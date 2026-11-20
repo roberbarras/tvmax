@@ -3,7 +3,7 @@ set -e
 
 # Configuration
 APP_NAME="tvmax"
-VERSION="1.1.0"
+VERSION="1.2.0"
 ARCH="amd64"
 BUILD_DIR="../build/linux/x64/release/bundle"
 DEB_DIR="${APP_NAME}_${VERSION}_${ARCH}"
