@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TVMax"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "TVMax Open Source"
 #define MyAppURL "https://github.com/roberbarras/tvmax"
 #define MyAppExeName "tvmax.exe"

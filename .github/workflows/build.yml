@@ -3,6 +3,8 @@ name: Build TVMax
 on:
   push:
     branches: [ "main" ]
+    # Pushing a version tag (e.g. 1.1) builds everything and publishes a GitHub Release
+    tags: [ "[0-9]*" ]
   workflow_dispatch:
 
 jobs:
@@ -244,3 +246,42 @@ jobs:
         with:
           name: ios-unsigned-build
           path: build/ios/iphoneos/tvmax-ios-unsigned.zip
+
+  # -----------------------------------------------------------------------------
+  # GITHUB RELEASE (only for version tags)
+  # -----------------------------------------------------------------------------
+  release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-android, build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect Release Files
+        run: |
+          mkdir -p release
+          # app-arm64-v8a-release.apk -> tvmax-arm64-v8a-release.apk
+          for f in artifacts/android-apks/app-*.apk; do
+            cp "$f" "release/tvmax-$(basename "$f" | sed 's/^app-//')"
+          done
+          cp artifacts/linux-artifacts/* release/
+          cp artifacts/windows-installer/*.exe release/
+          cp artifacts/macos-unsigned-build/*.zip release/
+          ls -la release
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ github.ref_name }}
+          # Notes for each version live in .github/release-notes/<tag>.md
+          body_path: .github/release-notes/${{ github.ref_name }}.md
+          files: release/*
+          fail_on_unmatched_files: true
