@@ -17,6 +17,12 @@ class AppConstants {
     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0',
   };
 
+  // Live streams are public: no cookie, so never send the user's session to the CDN.
+  static const Map<String, String> liveHeaders = {
+    'referer': 'https://www.atresplayer.com/',
+    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0',
+  };
+
   static Map<String, String> getHeaders(String? cookie) {
     if (cookie != null && cookie.isNotEmpty) {
       print('[AppConstants] Adding Cookie to headers (len=${cookie.length})');

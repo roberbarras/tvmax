@@ -6,6 +6,9 @@ import '../../features/programs/presentation/pages/documentaries_screen.dart';
 import '../../features/favorites/presentation/pages/favorites_screen.dart';
 import '../../features/player/presentation/pages/downloads_screen.dart';
 import '../../features/settings/presentation/pages/settings_screen.dart';
+import 'features/live/presentation/pages/live_screen.dart';
+import 'core/presentation/widgets/reorderable_tab_bar.dart';
+import 'core/utils/device_utils.dart';
 
 import 'package:provider/provider.dart';
 import '../../core/providers/navigation_provider.dart';
@@ -22,8 +25,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   // Removed local _selectedIndex
 
+  // Same order as AppTab.values: the bar order is customisable, the screens' is not.
   final List<Widget> _screens = const [
     ProgramsScreen(),
+    LiveScreen(),
     NewsScreen(),
     SeriesScreen(),
     DocumentariesScreen(),
@@ -31,33 +36,38 @@ class _MainScreenState extends State<MainScreen> {
     DownloadsScreen(),
     SettingsScreen(),
   ];
-  
+
+  bool _isTv = false; // Tabs can only be reordered off-TV
+
   @override
   void initState() {
     super.initState();
+    DeviceUtils.isAndroidTv().then((tv) {
+      if (mounted && tv != _isTv) setState(() => _isTv = tv);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final downloadsProvider = context.read<DownloadsProvider>();
       downloadsProvider.errorStream.listen((message) {
         if (mounted) {
-           _showErrorNotification(context, message);
+          _showErrorNotification(context, message);
         }
       });
-      
+
       // Apply default section
       final settingsProvider = context.read<SettingsProvider>();
-      if (settingsProvider.defaultSectionIndex != 0) {
-         context.read<NavigationProvider>().setIndex(settingsProvider.defaultSectionIndex);
-      }
-      
+      context
+          .read<NavigationProvider>()
+          .setTab(settingsProvider.defaultSection);
+
       // Request initial focus on Bottom Bar
       // We perform a delayed request to ensure the widget tree is ready and nodes are attached.
       Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) {
-              final nav = context.read<NavigationProvider>();
-              if (nav.bottomBarFocusNode.canRequestFocus) {
-                 nav.bottomBarFocusNode.requestFocus();
-              }
+        if (mounted) {
+          final nav = context.read<NavigationProvider>();
+          if (nav.bottomBarFocusNode.canRequestFocus) {
+            nav.bottomBarFocusNode.requestFocus();
           }
+        }
       });
     });
   }
@@ -65,17 +75,16 @@ class _MainScreenState extends State<MainScreen> {
   // ... (error notification method omitted but preserved if not overlapped, wait, I need to match StartLine carefully)
   // Actually I cannot skip lines inside snippet if I don't provide them.
   // I will just use StartLine/EndLine for the specific blocks.
-  
+
   // I will do two edits. One for initState, one for build.
   // Wait, I can do one `replace_file_content` if I include the whole file or large chunk, but that's wasteful.
   // I'll do two chunks since the tool allows replacement chunks.
-  
-  // Actually, I'll just replace initState first.
 
+  // Actually, I'll just replace initState first.
 
   void _showErrorNotification(BuildContext context, String message) {
     OverlayEntry? overlayEntry;
-    
+
     overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: 50,
@@ -88,7 +97,9 @@ class _MainScreenState extends State<MainScreen> {
             decoration: BoxDecoration(
               color: Colors.red[900],
               borderRadius: BorderRadius.circular(8),
-              boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black45)],
+              boxShadow: const [
+                BoxShadow(blurRadius: 10, color: Colors.black45)
+              ],
               border: Border.all(color: Colors.redAccent, width: 1),
             ),
             child: Row(
@@ -101,14 +112,20 @@ class _MainScreenState extends State<MainScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Error de Descarga', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                      const Text('Error de Descarga',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
                       const SizedBox(height: 4),
-                      Text(message, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                      Text(message,
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12)),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white54, size: 16),
+                  icon:
+                      const Icon(Icons.close, color: Colors.white54, size: 16),
                   onPressed: () => overlayEntry?.remove(),
                 )
               ],
@@ -127,6 +144,18 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _onTabSelected(
+      BuildContext context, NavigationProvider nav, AppTab tab) {
+    nav.setTab(tab);
+
+    // Move focus to content (Up direction). Small delay so the UI can rebuild first.
+    Future.microtask(() {
+      if (context.mounted) {
+        FocusScope.of(context).focusInDirection(TraversalDirection.up);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<NavigationProvider>(
@@ -135,104 +164,72 @@ class _MainScreenState extends State<MainScreen> {
           canPop: false,
           onPopInvoked: (didPop) async {
             if (didPop) return;
-            
+
             if (navProvider.bottomBarFocusNode.hasFocus) {
-               // Focus is on bottom bar, allow exit
-               final shouldPop = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                     title: const Text('¿Salir de TVMax?'),
-                     actions: [
-                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-                        TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Salir')),
-                     ],
-                  ),
-               );
-               if (shouldPop ?? false) {
-                   if (context.mounted) Navigator.of(context).pop();
-               }
+              // Focus is on bottom bar, allow exit
+              final shouldPop = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('¿Salir de TVMax?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancelar')),
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Salir')),
+                  ],
+                ),
+              );
+              if (shouldPop ?? false) {
+                if (context.mounted) Navigator.of(context).pop();
+              }
             } else {
-               // Focus is in content -> Returning to bottom bar
-               navProvider.bottomBarFocusNode.requestFocus();
+              // Focus is in content -> Returning to bottom bar
+              navProvider.bottomBarFocusNode.requestFocus();
             }
           },
           child: Scaffold(
             body: IndexedStack(
-              index: navProvider.currentIndex,
+              index: navProvider.currentTab.index,
               // All tabs stay alive in the stack; hidden ones must not take
               // part in D-pad traversal or focus can jump into an invisible tab.
               children: [
                 for (int i = 0; i < _screens.length; i++)
                   ExcludeFocus(
-                    excluding: i != navProvider.currentIndex,
+                    excluding: i != navProvider.currentTab.index,
                     child: _screens[i],
                   ),
               ],
             ),
             bottomNavigationBar: FocusScope(
-            node: navProvider.bottomBarFocusNode,
-            child: NavigationBar(
-              selectedIndex: navProvider.currentIndex,
-              onDestinationSelected: (index) {
-                // Determine if we need to switch tab or just focus content
-                bool shouldFocusContent = true;
-                
-                if (navProvider.currentIndex != index) {
-                   navProvider.setIndex(index);
-                }
-                
-                // Move focus to content (Up direction)
-                if (shouldFocusContent) {
-                   // Small delay to allow UI rebuild if switching tabs
-                   Future.microtask(() {
-                      if (context.mounted) {
-                          FocusScope.of(context).focusInDirection(TraversalDirection.up);
-                      }
-                   });
-                }
-              },
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
-                  label: 'Programas',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.newspaper_outlined),
-                  selectedIcon: Icon(Icons.newspaper),
-                  label: 'Noticias',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.movie_creation_outlined),
-                  selectedIcon: Icon(Icons.movie_creation),
-                  label: 'Series',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.videocam_outlined),
-                  selectedIcon: Icon(Icons.videocam),
-                  label: 'Documentales',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.favorite_outline),
-                  selectedIcon: Icon(Icons.favorite),
-                  label: 'Favoritos',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.download_outlined),
-                  selectedIcon: Icon(Icons.download),
-                  label: 'Descargas',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.settings_outlined),
-                  selectedIcon: Icon(Icons.settings),
-                  label: 'Ajustes',
-                ),
-              ],
+              node: navProvider.bottomBarFocusNode,
+              child: _isTv
+                  ? NavigationBar(
+                      selectedIndex:
+                          navProvider.order.indexOf(navProvider.currentTab),
+                      onDestinationSelected: (index) => _onTabSelected(
+                          context, navProvider, navProvider.order[index]),
+                      destinations: [
+                        for (final tab in navProvider.order)
+                          NavigationDestination(
+                            icon: Icon(tab.icon),
+                            selectedIcon: Icon(tab.selectedIcon),
+                            label: tab.label,
+                          ),
+                      ],
+                    )
+                  : ReorderableTabBar(
+                      tabs: navProvider.order,
+                      selected: navProvider.currentTab,
+                      onSelected: (tab) =>
+                          _onTabSelected(context, navProvider, tab),
+                      onReorder: navProvider.moveTab,
+                    ),
             ),
           ),
-        ),
-      );
-    },
+        );
+      },
     );
   }
 }

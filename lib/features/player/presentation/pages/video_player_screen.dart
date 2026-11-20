@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io'; // Required for Platform checks
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import '../../../../core/utils/device_utils.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,12 +15,15 @@ class VideoPlayerScreen extends StatefulWidget {
   final String url;
   final String title;
   final String episodeId;
+  // Live channel: no resume dialog, no progress saving, no seeking.
+  final bool isLive;
 
   const VideoPlayerScreen({
     super.key, 
     required this.url, 
     required this.title,
     required this.episodeId,
+    this.isLive = false,
   });
 
   @override
@@ -48,6 +51,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Duration? _pendingSeek; // Target shown while the user taps left/right
   Timer? _seekDebounce;
   int _seekRepeats = 0;
+
+  // --- Start-up diagnostics: never leave the user on an endless spinner ---
+  static const _startTimeout = Duration(seconds: 25);
+  bool _started = false; // true once the first video frame size is known
+  String? _playbackError;
+  Timer? _startWatchdog;
 
   // --- End of playback ---
   StreamSubscription<bool>? _completedSub;
@@ -78,8 +87,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     
     // Listen to logs for HW failures
     player.stream.log.listen((event) {
-      if (event.level == MPVLogLevel.error || event.level == MPVLogLevel.warn) {
-         print('[MPV] ${event.prefix}: ${event.text}');
+      // Until the first frame, log everything mpv says (network, demuxer...) to diagnose slow/stuck starts.
+      if (!_started || event.level == MPVLogLevel.error || event.level == MPVLogLevel.warn) {
+         print('[MPV] ${event.prefix}: ${event.text.trim()}');
       }
       if (_useHardwareAcceleration && !_hasFallenBack) {
          if (event.text.contains('hwaccel') && event.text.contains('error') || 
@@ -92,6 +102,24 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     player.stream.error.listen((event) {
       print('[VideoPlayer] ERROR: $event');
+      if (!_started && mounted) setState(() => _playbackError = event);
+    });
+
+    player.stream.buffering.listen((b) => print('[VideoPlayer] buffering=$b'));
+    player.stream.playing.listen((p) => print('[VideoPlayer] playing=$p'));
+    player.stream.width.listen((w) {
+      print('[VideoPlayer] video width=$w');
+      if ((w ?? 0) > 0) {
+        _started = true;
+        _startWatchdog?.cancel();
+        if (_playbackError != null && mounted) setState(() => _playbackError = null);
+      }
+    });
+    _startWatchdog = Timer(_startTimeout, () {
+      if (mounted && !_started) {
+        print('[VideoPlayer] No video after ${_startTimeout.inSeconds}s');
+        setState(() => _playbackError ??= 'El vídeo no ha empezado a reproducirse. Revisa la conexión o inténtalo de nuevo.');
+      }
     });
     
     _completedSub = player.stream.completed.listen((completed) {
@@ -108,33 +136,30 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     _initializeController();
     
-    // Get headers with cookie
-    final settings = context.read<SettingsProvider>();
-    print('[VideoPlayer] Loading with cookie: ${settings.cookie.isNotEmpty ? "YES" : "NO"}');
-    final headers = AppConstants.getHeaders(settings.cookie);
+    final headers = _mediaHeaders();
     
     // Pass headers to Media
     print('[VideoPlayer] Opening media (${headers.length} headers)');
     player.open(Media(widget.url, httpHeaders: headers));
     
     _detectTv();
-    _checkSavedProgress();
-    _startProgressSaver();
+    if (!widget.isLive) {
+      _checkSavedProgress();
+      _startProgressSaver();
+    }
     _checkDeviceCapabilities();
+  }
+
+  // Live streams are public, so the session cookie is only sent for on-demand content.
+  Map<String, String> _mediaHeaders() {
+    if (widget.isLive) return AppConstants.liveHeaders;
+    return AppConstants.getHeaders(context.read<SettingsProvider>().cookie);
   }
 
   // Android TV exposes the leanback feature. There we replace the touch
   // controls with D-pad ones (OK = play/pause, left/right = seek).
   Future<void> _detectTv() async {
-    var tv = false;
-    if (Platform.isAndroid) {
-      try {
-        final info = await DeviceInfoPlugin().androidInfo;
-        tv = info.systemFeatures.contains('android.software.leanback');
-      } catch (e) {
-        print('[VideoPlayer] Error detecting TV: $e');
-      }
-    }
+    final tv = await DeviceUtils.isAndroidTv();
     if (!mounted) return;
     setState(() => _isTv = tv);
     if (tv) _showOverlay();
@@ -209,7 +234,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
      
      // Useful: restart playback to clear bad state
      final pos = player.state.position;
-     player.open(Media(widget.url, httpHeaders: AppConstants.getHeaders(context.read<SettingsProvider>().cookie)));
+     player.open(Media(widget.url, httpHeaders: _mediaHeaders()));
      player.seek(pos);
      player.seek(pos);
   }
@@ -301,6 +326,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void dispose() {
     _saveProgressTimer?.cancel();
+    _startWatchdog?.cancel();
     _overlayTimer?.cancel();
     _seekDebounce?.cancel();
     _endTimer?.cancel();
@@ -332,6 +358,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Future<void> _saveCurrentProgress() async {
+    if (widget.isLive) return;
     final pos = player.state.position.inMilliseconds;
     final duration = player.state.duration.inMilliseconds;
     
@@ -539,6 +566,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     // Holding left/right repeats (and accelerates); everything else is once per press.
     if (_isSeekKey(key)) {
+      if (widget.isLive) return KeyEventResult.handled; // Nothing to seek in a live stream
       final forward = key == LogicalKeyboardKey.arrowRight || key == LogicalKeyboardKey.mediaFastForward;
       _seekBy(forward);
       return KeyEventResult.handled;
@@ -683,6 +711,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         ),
                       ),
                     ),
+                    if (widget.isLive)
+                      Row(
+                        children: const [
+                          Icon(Icons.circle, size: 12, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('EN DIRECTO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ],
+                      )
+                    else
                     StreamBuilder<Duration>(
                       stream: player.stream.duration,
                       initialData: player.state.duration,
@@ -726,9 +763,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       },
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'OK: pausa / reanudar    ◀ ▶: -10 s / +10 s (mantén para ir más rápido)    ▲: subtítulos    ▼: calidad',
-                      style: TextStyle(color: Colors.white54, fontSize: 13),
+                    Text(
+                      widget.isLive
+                          ? 'OK: pausa / reanudar    ▲: subtítulos    ▼: calidad'
+                          : 'OK: pausa / reanudar    ◀ ▶: -10 s / +10 s (mantén para ir más rápido)    ▲: subtítulos    ▼: calidad',
+                      style: const TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                   ],
                 ),
@@ -783,6 +822,32 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     // Close any open dialog (quality, subtitles...) first, then leave the player.
     if (route != null) navigator.popUntil((r) => r == route);
     navigator.pop();
+  }
+
+  Widget _buildErrorBanner() {
+    return Positioned(
+      top: 24,
+      left: 24,
+      right: 24,
+      child: IgnorePointer(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.red[900],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(_playbackError!, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildEndOverlay() {
@@ -956,6 +1021,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           else
             video,
           if (isTv) _buildTvOverlay(),
+          if (_playbackError != null && !_isEnding) _buildErrorBanner(),
           if (_isEnding) _buildEndOverlay(),
         ],
       ),
